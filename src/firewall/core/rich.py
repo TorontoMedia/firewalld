@@ -24,13 +24,21 @@ __all__ = [ "Rich_Source", "Rich_Destination", "Rich_Service", "Rich_Port",
             "Rich_IcmpType",
             "Rich_SourcePort", "Rich_ForwardPort", "Rich_Log", "Rich_NFLog",
             "Rich_Accept", "Rich_Reject", "Rich_Drop", "Rich_Mark",
-            "Rich_Audit", "Rich_Limit", "Rich_Rule", "Rich_Tcp_Mss_Clamp" ]
+            "Rich_Audit", "Rich_Limit", "Rich_Rule", "Rich_Tcp_Mss_Clamp",
+            "Rich_Invert" ]
+
+from enum import IntFlag
 
 from firewall import functions
 from firewall.core.ipset import check_ipset_name
 from firewall.core.base import REJECT_TYPES
 from firewall import errors
 from firewall.errors import FirewallError
+
+
+class Rich_Invert(IntFlag):
+    SOURCE = 1 << 1
+    DESTINATION = 1 << 2
 
 class Rich_Source(object):
     def __init__(self, addr, mac, ipset, invert=False):
@@ -384,6 +392,7 @@ class Rich_Rule(object):
 
         attrs = {}       # attributes of elements
         in_elements = [] # stack with elements we are in
+        inversions = 0   # inverted elements
         index = 0        # index into tokens
         while not (tokens[index].get('element')  == 'EOL' and in_elements == ['rule']):
             element = tokens[index].get('element')
@@ -454,22 +463,48 @@ class Rich_Rule(object):
                 else:
                     in_elements.append(element) # push into stack
             elif in_element == 'source':
-                if attr_name in ['address', 'mac', 'ipset', 'invert']:
+                if attr_name in ['address', 'mac', 'ipset']:
                     attrs[attr_name] = attr_value
+                elif attr_name == 'invert':
+                    invert = attr_value.lower()
+                    if invert in ["yes", "true"]:
+                        inversions |= Rich_Invert.SOURCE
+                    elif invert in ["no", "false"]:
+                        inversions &= ~Rich_Invert.SOURCE
+                    else:
+                        raise FirewallError(errors.INVALID_RULE, "invalid 'invert' attribute value '%s' provided to the 'source' element." % attr_value)
                 elif element in ['not', 'NOT']:
-                    attrs['invert'] = True
+                    if tokens[index + 1].get('attr_name') in ['address', 'mac', 'ipset']:
+                        inversions |= Rich_Invert.SOURCE
+                    elif tokens[index + 1].get('element') == 'destination':
+                        inversions |= Rich_Invert.DESTINATION
+                    else:
+                        raise FirewallError(errors.INVALID_RULE, "Negation outside of element can only precede 'destination' or 'source'")
                 else:
-                    self.source = Rich_Source(attrs.get('address'), attrs.get('mac'), attrs.get('ipset'), attrs.get('invert', False))
+                    self.source = Rich_Source(attrs.get('address'), attrs.get('mac'), attrs.get('ipset'), bool(inversions & Rich_Invert.SOURCE))
                     in_elements.pop() # source
                     attrs.clear()
                     index = index -1 # return token to input
             elif in_element == 'destination':
-                if attr_name in ['address', 'ipset', 'invert']:
+                if attr_name in ['address', 'ipset']:
                     attrs[attr_name] = attr_value
+                elif attr_name == 'invert':
+                    invert = attr_value.lower()
+                    if invert in ["yes", "true"]:
+                        inversions |= Rich_Invert.DESTINATION
+                    elif invert in ["no", "false"]:
+                        inversions &= ~Rich_Invert.DESTINATION
+                    else:
+                        raise FirewallError(errors.INVALID_RULE, "invalid 'invert' attribute value '%s' provided to the 'destination' element." % attr_value)
                 elif element in ['not', 'NOT']:
-                    attrs['invert'] = True
+                    if tokens[index + 1].get('attr_name') in ['address', 'ipset']:
+                        inversions |= Rich_Invert.DESTINATION
+                    elif tokens[index + 1].get('element') == 'source':
+                        inversions |= Rich_Invert.SOURCE
+                    else:
+                        raise FirewallError(errors.INVALID_RULE, "Negation outside of element can only precede 'destination' or 'source'")
                 else:
-                    self.destination = Rich_Destination(attrs.get('address'), attrs.get('ipset'), attrs.get('invert', False))
+                    self.destination = Rich_Destination(attrs.get('address'), attrs.get('ipset'), bool(inversions & Rich_Invert.DESTINATION))
                     in_elements.pop() # destination
                     attrs.clear()
                     index = index -1 # return token to input
