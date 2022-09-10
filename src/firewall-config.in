@@ -2054,14 +2054,14 @@ class FirewallConfig(object):
             if obj.action.limit:
                 action += "\n" + _("limit") + " " + obj.action.limit.value
         if obj.source:
-            if obj.source.invert:
+            if obj.source.flags & rich.AddressFlag.INVERTED:
                 src = "! "
-            if obj.source.addr:
-                src += "IP: %s" % obj.source.addr
-            elif obj.source.mac:
-                src += "MAC: %s" % obj.source.mac
-            elif obj.source.ipset:
-                src += "ipset:%s" % obj.source.ipset
+            if obj.source.flags & rich.AddressFlag.ADDRESS:
+                src += "IP: %s" % obj.source.address
+            elif obj.source.flags & rich.AddressFlag.MAC:
+                src += "MAC: %s" % obj.source.address
+            elif obj.source.flags & rich.AddressFlag.IPSET:
+                src += "ipset:%s" % obj.source.address
         if obj.destination:
             dest = obj.destination.addr
             if obj.destination.invert:
@@ -3240,20 +3240,20 @@ class FirewallConfig(object):
 
             # source
             if old_obj.source:
-                if old_obj.source.addr:
+                if old_obj.source.flags & rich.AddressFlag.ADDRESS:
                     combobox_select_text(self.richRuleDialogSourceTypeCombobox,
                                          "IP")
-                    self.richRuleDialogSourceChooser.set_text(old_obj.source.addr)
-                elif old_obj.source.mac:
+                    self.richRuleDialogSourceChooser.set_text(old_obj.source.address)
+                elif old_obj.source.flags & rich.AddressFlag.MAC:
                     combobox_select_text(self.richRuleDialogSourceTypeCombobox,
                                          "MAC")
-                    self.richRuleDialogSourceChooser.set_text(old_obj.source.mac)
-                elif old_obj.source.ipset:
+                    self.richRuleDialogSourceChooser.set_text(old_obj.source.address)
+                elif old_obj.source.flags & rich.AddressFlag.IPSET:
                     combobox_select_text(self.richRuleDialogSourceTypeCombobox,
                                          "ipset")
-                    self.richRuleDialogSourceChooser.set_text(old_obj.source.ipset)
+                    self.richRuleDialogSourceChooser.set_text(old_obj.source.address)
                 self.richRuleDialogSourceInvertCheck.set_active( \
-                    old_obj.source.invert)
+                    old_obj.source.flags & rich.AddressFlag.INVERTED)
 
             # destination
             if old_obj.destination:
@@ -3722,16 +3722,20 @@ class FirewallConfig(object):
            and (self.richRuleDialogSourceChooser.get_text() != "" \
                 or self.richRuleDialogSourceInvertCheck.get_active()):
             txt = self.richRuleDialogSourceTypeCombobox.get_active_text()
-            addr = mac = ipset = None
+            address = None
+            flags = rich.AddressFlag.NONE
             if txt == "IP":
-                addr = self.richRuleDialogSourceChooser.get_text()
+                flags |= rich.AddressFlag.ADDRESS
+                address = self.richRuleDialogSourceChooser.get_text()
             if txt == "MAC":
-                mac = self.richRuleDialogSourceChooser.get_text()
+                flags |= rich.AddressFlag.MAC
+                address = self.richRuleDialogSourceChooser.get_text()
             if txt == "ipset":
-                ipset = self.richRuleDialogSourceChooser.get_text()
-            rule.source = rich.Rich_Source(
-                addr, mac, ipset,
-                self.richRuleDialogSourceInvertCheck.get_active())
+                flags |= rich.AddressFlag.IPSET
+                address = self.richRuleDialogSourceChooser.get_text()
+            if self.richRuleDialogSourceInvertCheck.get_active():
+                flags |= rich.AddressFlag.INVERTED
+            rule.source = rich.Source(address, flags)
 
         # destination
         if self.richRuleDialogDestinationBox.is_sensitive() \

@@ -19,6 +19,7 @@ from firewall.functions import (
     portInPortRange,
     portStr,
     uniqify,
+    parse_boolean,
 )
 from firewall.core.base import DEFAULT_POLICY_TARGET, POLICY_TARGETS, DEFAULT_POLICY_PRIORITY
 from firewall.core.io.io_object import IO_Object, \
@@ -549,13 +550,13 @@ def common_writer(obj, handler):
         # source
         if rule.source:
             attrs = { }
-            if rule.source.addr:
-                attrs["address"] = rule.source.addr
-            if rule.source.mac:
-                attrs["mac"] = rule.source.mac
-            if rule.source.ipset:
-                attrs["ipset"] = rule.source.ipset
-            if rule.source.invert:
+            if rule.source.flags & rich.AddressFlag.ADDRESS:
+                attrs["address"] = rule.source.address
+            elif rule.source.flags & rich.AddressFlag.MAC:
+                attrs["mac"] = rule.source.address
+            elif rule.source.flags & rich.AddressFlag.IPSET:
+                attrs["ipset"] = rule.source.address
+            if rule.source.flags & rich.AddressFlag.INVERTED:
                 attrs["invert"] = "True"
             handler.ignorableWhitespace("    ")
             handler.simpleElement("source", attrs)
@@ -1028,19 +1029,21 @@ class policy_ContentHandler(IO_Object_ContentHandler):
                             str(self._rule))
                 self._rule_error = True
                 return
-            invert = False
-            if "invert" in attrs and \
-                    attrs["invert"].lower() in [ "yes", "true" ]:
-                invert = True
-            addr = mac = ipset = None
+
+            address = ""
+            flags = rich.AddressFlag.NONE
+            if "invert" in attrs and parse_boolean(attrs["invert"]):
+                flags |= rich.AddressFlag.INVERTED
             if "address" in attrs:
-                addr = attrs["address"]
+                flags |= rich.AddressFlag.ADDRESS
+                address = attrs["address"]
             if "mac" in attrs:
-                mac = attrs["mac"]
+                flags |= rich.AddressFlag.MAC
+                address = attrs["mac"]
             if "ipset" in attrs:
-                ipset = attrs["ipset"]
-            self._rule.source = rich.Rich_Source(addr, mac, ipset,
-                                                 invert=invert)
+                flags |= rich.AddressFlag.IPSET
+                address = attrs["ipset"]
+            self._rule.source = rich.Source(address, flags)
             return
 
         else:

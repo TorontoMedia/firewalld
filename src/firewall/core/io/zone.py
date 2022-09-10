@@ -27,7 +27,7 @@ import io
 import shutil
 
 from firewall import config
-from firewall.functions import checkIPnMask, checkIP6nMask, checkInterface, uniqify, max_zone_name_len, check_mac
+from firewall.functions import checkIPnMask, checkIP6nMask, checkInterface, parse_boolean, uniqify, max_zone_name_len, check_mac
 from firewall.core.base import DEFAULT_ZONE_TARGET, ZONE_TARGETS
 from firewall.core.io.io_object import IO_Object, \
     IO_Object_ContentHandler, IO_Object_XMLGenerator
@@ -327,20 +327,22 @@ class zone_ContentHandler(IO_Object_ContentHandler):
                                 str(self._rule))
                     self._rule_error = True
                     return
-                invert = False
-                if "invert" in attrs and \
-                        attrs["invert"].lower() in [ "yes", "true" ]:
-                    invert = True
-                addr = mac = ipset = None
+                address = ""
+                flags = rich.AddressFlag.NONE
+                if "invert" in attrs and parse_boolean(attrs["invert"]):
+                    flags |= rich.AddressFlag.INVERTED
                 if "address" in attrs:
-                    addr = attrs["address"]
+                    flags |= rich.AddressFlag.ADDRESS
+                    address = attrs["address"]
                 if "mac" in attrs:
-                    mac = attrs["mac"]
+                    flags |= rich.AddressFlag.MAC
+                    address = attrs["mac"]
                 if "ipset" in attrs:
-                    ipset = attrs["ipset"]
-                self._rule.source = rich.Rich_Source(addr, mac, ipset,
-                                                     invert=invert)
+                    flags |= rich.AddressFlag.IPSET
+                    address = attrs["ipset"]
+                self._rule.source = rich.Source(address, flags)
                 return
+
             # zone bound to source
             if "address" not in attrs and "ipset" not in attrs:
                 log.warning('Invalid source: No address no ipset.')

@@ -12,7 +12,7 @@ from firewall.functions import portStr, checkIPnMask, checkIP6nMask, \
 from firewall.core.rich import Rich_Rule, Rich_Accept, \
     Rich_Service, Rich_Port, Rich_Protocol, \
     Rich_Masquerade, Rich_ForwardPort, Rich_SourcePort, Rich_IcmpBlock, \
-    Rich_IcmpType, Rich_Tcp_Mss_Clamp
+    Rich_IcmpType, Rich_Tcp_Mss_Clamp, AddressFlag
 from firewall.core.fw_transaction import FirewallTransaction
 from firewall import errors
 from firewall.errors import FirewallError
@@ -426,17 +426,19 @@ class FirewallPolicy(object):
         if not source:
             return None
 
-        if source.addr:
-            if checkIPnMask(source.addr):
+        if source.flags & AddressFlag.ADDRESS:
+            if checkIPnMask(source.address):
+                source.flags ^= AddressFlag.IPV6
                 return "ipv4"
-            elif checkIP6nMask(source.addr):
+            elif checkIP6nMask(source.address):
+                source.flags ^= AddressFlag.IPV4
                 return "ipv6"
-        elif hasattr(source, "mac") and source.mac:
+        elif source.flags & AddressFlag.MAC:
             return ""
-        elif hasattr(source, "ipset") and source.ipset:
-            self._check_ipset_type_for_source(source.ipset)
-            self._check_ipset_applied(source.ipset)
-            return self._ipset_family(source.ipset)
+        elif source.flags & AddressFlag.IPSET:
+            self._check_ipset_type_for_source(source.address)
+            self._check_ipset_applied(source.address)
+            return self._ipset_family(source.address)
 
         return None
 

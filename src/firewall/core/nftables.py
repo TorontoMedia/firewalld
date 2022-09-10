@@ -30,7 +30,7 @@ from firewall.errors import FirewallError, UNKNOWN_ERROR, INVALID_RULE, \
                             INVALID_PORT
 from firewall.core.rich import Rich_Accept, Rich_Reject, Rich_Drop, Rich_Mark, \
                                Rich_Masquerade, Rich_ForwardPort, Rich_IcmpBlock, \
-                               Rich_Tcp_Mss_Clamp, Rich_NFLog
+                               Rich_Tcp_Mss_Clamp, Rich_NFLog, AddressFlag
 from firewall.core.base import DEFAULT_ZONE_TARGET
 from nftables.nftables import Nftables
 
@@ -1216,14 +1216,9 @@ class nftables(object):
         if not rich_source:
             return {}
 
-        if rich_source.addr:
-            address = rich_source.addr
-        elif hasattr(rich_source, "mac") and rich_source.mac:
-            address = rich_source.mac
-        elif hasattr(rich_source, "ipset") and rich_source.ipset:
-            address = "ipset:" + rich_source.ipset
-
-        return self._rule_addr_fragment("saddr", address, invert=rich_source.invert)
+        if rich_source.flags & AddressFlag.IPSET:
+            return self._rule_addr_fragment("saddr", f'ipset:{rich_source.address}', invert=rich_source.flags & AddressFlag.INVERTED)
+        return self._rule_addr_fragment("saddr", rich_source.address, invert=rich_source.flags & AddressFlag.INVERTED)
 
     def _port_fragment(self, port):
         range = getPortRange(port)

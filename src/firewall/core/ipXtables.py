@@ -29,7 +29,8 @@ from firewall.functions import tempFile, readfile, splitArgs, check_mac, portStr
 from firewall import config
 from firewall.errors import FirewallError, INVALID_PASSTHROUGH, INVALID_RULE, UNKNOWN_ERROR, INVALID_ADDR
 from firewall.core.rich import Rich_Accept, Rich_Reject, Rich_Drop, Rich_Mark, Rich_NFLog, \
-                               Rich_Masquerade, Rich_ForwardPort, Rich_IcmpBlock, Rich_Tcp_Mss_Clamp
+                               Rich_Masquerade, Rich_ForwardPort, Rich_IcmpBlock, Rich_Tcp_Mss_Clamp, \
+                               AddressFlag
 from firewall.core.base import DEFAULT_ZONE_TARGET
 import string
 
@@ -1136,27 +1137,28 @@ class ip4tables(object):
             return []
 
         rule_fragment = []
-        if rich_source.addr:
-            if rich_source.invert:
+        if rich_source.flags & AddressFlag.ADDRESS:
+            if rich_source.flags & AddressFlag.INVERTED:
                 rule_fragment.append("!")
-            if check_single_address("ipv6", rich_source.addr):
-                rule_fragment += [ "-s", normalizeIP6(rich_source.addr) ]
-            elif check_address("ipv6", rich_source.addr):
-                addr_split = rich_source.addr.split("/")
-                rule_fragment += [ "-s", normalizeIP6(addr_split[0]) + "/" + addr_split[1] ]
+            rule_fragment.append("-s")
+            if check_single_address("ipv6", rich_source.address):
+                rule_fragment.append(normalizeIP6(rich_source.address))
+            elif check_address("ipv6", rich_source.address):
+                addr_split = rich_source.address.split("/")
+                rule_fragment.append(normalizeIP6(addr_split[0]) + "/" + addr_split[1])
             else:
-                rule_fragment += [ "-s", rich_source.addr ]
-        elif hasattr(rich_source, "mac") and rich_source.mac:
+                rule_fragment.append(rich_source.address)
+        elif rich_source.flags & AddressFlag.MAC:
             rule_fragment += [ "-m", "mac" ]
-            if rich_source.invert:
+            if rich_source.flags & AddressFlag.INVERTED:
                 rule_fragment.append("!")
-            rule_fragment += [ "--mac-source", rich_source.mac ]
-        elif hasattr(rich_source, "ipset") and rich_source.ipset:
+            rule_fragment += [ "--mac-source", rich_source.address ]
+        elif rich_source.flags & AddressFlag.IPSET:
             rule_fragment += [ "-m", "set" ]
-            if rich_source.invert:
+            if rich_source.flags & AddressFlag.INVERTED:
                 rule_fragment.append("!")
-            flags = self._fw.zone._ipset_match_flags(rich_source.ipset, "src")
-            rule_fragment += [ "--match-set", rich_source.ipset, flags ]
+            flags = self._fw.zone._ipset_match_flags(rich_source.address, "src")
+            rule_fragment += [ "--match-set", rich_source.address, flags ]
 
         return rule_fragment
 

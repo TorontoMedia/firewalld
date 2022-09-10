@@ -28,7 +28,7 @@ __all__ = [ "getPortID", "getPortRange", "portStr", "getServiceName",
             "max_zone_name_len", "checkUser", "checkUid", "checkCommand",
             "checkContext", "joinArgs", "splitArgs",
             "max_policy_name_len", "checkTcpMssClamp",
-            "stripNonPrintableCharacters"]
+            "stripNonPrintableCharacters", "parse_boolean"]
 
 import socket
 import os
@@ -613,3 +613,8 @@ def joinArgs(args):
 
 def splitArgs(_string):
     return shlex.split(_string)
+
+def parse_boolean(boolean: str) -> bool:
+    if boolean and boolean.lower() in ["yes", "true", "1"]:
+        return True
+    return False
