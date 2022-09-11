@@ -1205,12 +1205,10 @@ class nftables(object):
     def _rich_rule_destination_fragment(self, rich_dest):
         if not rich_dest:
             return {}
-        if rich_dest.addr:
-            address = rich_dest.addr
-        elif rich_dest.ipset:
-            address = "ipset:" + rich_dest.ipset
 
-        return self._rule_addr_fragment("daddr", address, invert=rich_dest.invert)
+        if rich_dest.flags & AddressFlag.IPSET:
+            return self._rule_addr_fragment("daddr", f'ipset:{rich_dest.address}', invert=rich_dest.flags & AddressFlag.INVERTED)
+        return self._rule_addr_fragment("daddr", rich_dest.address, invert=rich_dest.flags & AddressFlag.INVERTED)
 
     def _rich_rule_source_fragment(self, rich_source):
         if not rich_source:

@@ -2063,8 +2063,8 @@ class FirewallConfig(object):
             elif obj.source.flags & rich.AddressFlag.IPSET:
                 src += "ipset:%s" % obj.source.address
         if obj.destination:
-            dest = obj.destination.addr
-            if obj.destination.invert:
+            dest = obj.destination.address
+            if obj.destination.flags & rich.AddressFlag.INVERTED:
                 dest = "! %s" % dest
         if obj.element:
             if type(obj.element) == rich.Rich_Service:
@@ -3258,9 +3258,9 @@ class FirewallConfig(object):
             # destination
             if old_obj.destination:
                 self.richRuleDialogDestinationChooser.set_text( \
-                    old_obj.destination.addr)
+                    old_obj.destination.address)
                 self.richRuleDialogDestinationInvertCheck.set_active( \
-                    old_obj.destination.invert)
+                    old_obj.destination.flags & rich.AddressFlag.INVERTED)
 
             # log
             if old_obj.log:
@@ -3741,9 +3741,11 @@ class FirewallConfig(object):
         if self.richRuleDialogDestinationBox.is_sensitive() \
            and (self.richRuleDialogDestinationChooser.get_text() != "" \
                 or self.richRuleDialogDestinationInvertCheck.get_active()):
-            rule.destination = rich.Rich_Destination(
-                self.richRuleDialogDestinationChooser.get_text(),
-                self.richRuleDialogDestinationInvertCheck.get_active())
+            flags = rich.AddressFlag.ADDRESS
+            if self.richRuleDialogDestinationInvertCheck.get_active():
+                flags |= rich.AddressFlag.INVERTED
+            rule.destination = rich.Destination(
+                self.richRuleDialogDestinationChooser.get_text(), flags)
 
         # log
         if self.richRuleDialogLogCheck.is_sensitive() and \

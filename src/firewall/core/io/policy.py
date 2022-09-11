@@ -240,19 +240,18 @@ def common_startElement(obj, name, attrs):
             log.warning("Invalid rule: More than one destination in rule '%s', ignoring.",
                         str(obj._rule))
             return True
-        invert = False
-        address = None
+
+        address = ""
+        flags = rich.AddressFlag.NONE
+        if "invert" in attrs and parse_boolean(attrs["invert"]):
+            flags |= rich.AddressFlag.INVERTED
         if "address" in attrs:
+            flags |= rich.AddressFlag.ADDRESS
             address = attrs["address"]
-        ipset = None
         if "ipset" in attrs:
-            ipset = attrs["ipset"]
-        if "invert" in attrs and \
-                attrs["invert"].lower() in [ "yes", "true" ]:
-            invert = True
-        obj._rule.destination = rich.Rich_Destination(address,
-                                                      ipset,
-                                                      invert)
+            flags |= rich.AddressFlag.IPSET
+            address = attrs["ipset"]
+        obj._rule.destination = rich.Destination(address, flags)
 
     elif name in [ "accept", "reject", "drop", "mark" ]:
         if not obj._rule:
@@ -565,11 +564,11 @@ def common_writer(obj, handler):
         # destination
         if rule.destination:
             attrs = { }
-            if rule.destination.addr:
-                attrs["address"] = rule.destination.addr
-            if rule.destination.ipset:
-                attrs["ipset"] = rule.destination.ipset
-            if rule.destination.invert:
+            if rule.destination.flags & rich.AddressFlag.ADDRESS:
+                attrs["address"] = rule.destination.address
+            elif rule.destination.flags & rich.AddressFlag.IPSET:
+                attrs["ipset"] = rule.destination.address
+            if rule.destination.flags & rich.AddressFlag.INVERTED:
                 attrs["invert"] = "True"
             handler.ignorableWhitespace("    ")
             handler.simpleElement("destination", attrs)

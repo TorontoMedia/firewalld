@@ -19,7 +19,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-__all__ = [ "Source", "Rich_Destination", "Rich_Service", "Rich_Port",
+__all__ = [ "Source", "Destination", "Rich_Service", "Rich_Port",
             "Rich_Protocol", "Rich_Masquerade", "Rich_IcmpBlock",
             "Rich_IcmpType",
             "Rich_SourcePort", "Rich_ForwardPort", "Rich_Log", "Rich_NFLog",
@@ -78,28 +78,19 @@ class Source:
         raise FirewallError(errors.INVALID_RULE,
                             "no address, mac and ipset")
 
-class Rich_Destination(object):
-    def __init__(self, addr, ipset, invert=False):
-        self.addr = addr
-        if self.addr == "":
-            self.addr = None
-        self.ipset = ipset
-        if self.ipset == "":
-            self.ipset = None
-        self.invert = invert
-        if self.addr is None and self.ipset is None:
-            raise FirewallError(errors.INVALID_RULE,
-                                "no address and ipset")
+@dataclass
+class Destination:
+    address: str
+    flags: AddressFlag
 
-    def __str__(self):
-        ret = 'destination%s ' % (" NOT" if self.invert else "")
-        if self.addr is not None:
-            return ret + 'address="%s"' % self.addr
-        elif self.ipset is not None:
-            return ret + 'ipset="%s"' % self.ipset
-        else:
-            raise FirewallError(errors.INVALID_RULE,
-                                "no address and ipset")
+    def __str__(self) -> str:
+        ret = f'destination{(" NOT" if self.flags & AddressFlag.INVERTED else "")}'
+        if self.flags & AddressFlag.ADDRESS:
+            return f'{ret} address="{self.address}"'
+        elif self.flags & AddressFlag.IPSET:
+            return f'{ret} ipset="{self.address}"'
+        raise FirewallError(errors.INVALID_RULE,
+                            "no address and ipset")
 
 class Rich_Service(object):
     def __init__(self, name):
@@ -498,14 +489,30 @@ class Rich_Rule(object):
                     flags = AddressFlag.NONE
                     index = index -1 # return token to input
             elif in_element == 'destination':
-                if attr_name in ['address', 'ipset', 'invert']:
-                    attrs[attr_name] = attr_value
+                if attr_name in ['address', 'ipset']:
+                    flags |= AddressFlag[attr_name.upper()]
+                    attrs['address'] = attr_value
+                elif attr_name == 'invert':
+                    if functions.parse_boolean(attr_value):
+                        inversions |= InversionFlag.DESTINATION
+                    else:
+                        inversions &= ~InversionFlag.DESTINATION
                 elif element in ['not', 'NOT']:
-                    attrs['invert'] = True
+                    if tokens[index + 1].get('attr_name') in ['address', 'ipset']:
+                        inversions |= InversionFlag.DESTINATION
+                    elif tokens[index + 1].get('element') in ['source']:
+                        inversions |= InversionFlag.get(tokens[index + 1]['element'])
                 else:
-                    self.destination = Rich_Destination(attrs.get('address'), attrs.get('ipset'), attrs.get('invert', False))
+                    try:
+                        if inversions & InversionFlag.DESTINATION:
+                            flags |= AddressFlag.INVERTED
+                        self.destination = Destination(attrs['address'], flags)
+                    except KeyError as exc:
+                        raise FirewallError(errors.INVALID_RULE,
+                            "no address and ipset") from exc
                     in_elements.pop() # destination
                     attrs.clear()
+                    flags = 0
                     index = index -1 # return token to input
             elif in_element == 'protocol':
                 if attr_name == 'value':
@@ -700,17 +707,17 @@ class Rich_Rule(object):
 
         # destination
         if self.destination is not None:
-            if self.destination.addr is not None:
+            if self.destination.flags & AddressFlag.ADDRESS:
                 if self.family is None:
                     raise FirewallError(errors.INVALID_FAMILY)
-                if self.destination.ipset is not None:
+                if self.destination.flags & AddressFlag.IPSET:
                     raise FirewallError(errors.INVALID_DESTINATION, "address and ipset")
-                if not functions.check_address(self.family, self.destination.addr):
+                if not functions.check_address(self.family, self.destination.address):
                     raise FirewallError(errors.INVALID_ADDR, str(self.destination.addr))
 
-            elif self.destination.ipset is not None:
-                if not check_ipset_name(self.destination.ipset):
-                    raise FirewallError(errors.INVALID_IPSET, str(self.destination.ipset))
+            elif self.destination.flags & AddressFlag.IPSET:
+                if not check_ipset_name(self.destination.address):
+                    raise FirewallError(errors.INVALID_IPSET, str(self.destination.address))
 
             else:
                 raise FirewallError(errors.INVALID_RULE, "invalid destination")
