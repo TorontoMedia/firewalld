@@ -111,6 +111,8 @@ FWD_CHECK([--permanent --policy foobar --add-rich-rule='rule family=ipv4 priorit
 FWD_CHECK([--permanent --policy foobar --add-rich-rule='rule family=ipv4 priority=-2 destination address=10.20.20.21 accept'], 0, ignore)
 FWD_CHECK([--permanent --policy foobar --add-rich-rule='rule family=ipv4 priority=-3 source address=10.20.20.22 destination address=10.20.20.23 drop'], 0, ignore)
 FWD_CHECK([--permanent --policy foobar --add-rich-rule='rule family=ipv6 priority=-4 source address=1234::4321 destination address=1234::4444 drop'], 0, ignore)
+FWD_CHECK([--permanent --policy=foobar --add-rich-rule='rule family=ipv4 source not address="10.10.10.0/24" not service name=amanda-client accept'], 0, [ignore])
+FWD_CHECK([--permanent --policy=foobar --add-rich-rule='rule family=ipv6 source not address=1234::4321 not destination address=1234::4444 accept'], 0, [ignore])
 FWD_RELOAD
 NFT_LIST_RULES([inet], [filter_IN_policy_foobar_pre], 0, [dnl
     table inet firewalld {
@@ -123,14 +125,34 @@ NFT_LIST_RULES([inet], [filter_IN_policy_foobar_pre], 0, [dnl
         }
     }
 ])
+NFT_LIST_RULES([inet], [filter_IN_policy_foobar_allow], 0, [dnl
+    table inet firewalld {
+        chain filter_IN_policy_foobar_allow {
+            ip saddr 10.10.10.10 accept
+            ip saddr 10.10.10.11 accept
+            ip saddr != 10.10.10.0/24 udp dport != 10080 accept
+            ip saddr != 10.10.10.0/24 tcp dport != 10080 accept
+            ip6 daddr != 1234::4444 ip6 saddr != 1234::4321 accept
+        }
+    }
+])
 IPTABLES_LIST_RULES([filter], [IN_foobar_pre], 0, [dnl
     DROP all -- 10.20.20.22 10.20.20.23
     ACCEPT all -- 0.0.0.0/0 10.20.20.21
     ACCEPT all -- 10.10.10.14 0.0.0.0/0
     ACCEPT all -- 10.20.20.20 0.0.0.0/0
 ])
+IPTABLES_LIST_RULES([filter], [IN_foobar_allow], 0, [dnl
+    ACCEPT all -- 10.10.10.10 0.0.0.0/0
+    ACCEPT all -- 10.10.10.11 0.0.0.0/0
+    ACCEPT udp -- !10.10.10.0/24 0.0.0.0/0 udp dpt:!10080
+    ACCEPT tcp -- !10.10.10.0/24 0.0.0.0/0 tcp dpt:!10080
+])
 IP6TABLES_LIST_RULES([filter], [IN_foobar_pre], 0, [dnl
     DROP all 1234::4321 1234::4444
+])
+IP6TABLES_LIST_RULES([filter], [IN_foobar_allow], 0, [dnl
+    ACCEPT all !1234::4321 !1234::4444
 ])
 
 dnl icmp-type
