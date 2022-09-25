@@ -35,7 +35,7 @@
             [ &lt;source address="<replaceable>address</replaceable>[/<replaceable>mask</replaceable>]"|mac="<replaceable>MAC</replaceable>"|ipset="<replaceable>ipset</replaceable>" [invert="<replaceable>True</replaceable>"]/&gt; ]
             [ &lt;destination address="<replaceable>address</replaceable>[/<replaceable>mask</replaceable>]"|ipset="<replaceable>ipset</replaceable>" [invert="<replaceable>True</replaceable>"]/&gt; ]
             [
-                &lt;service name="<replaceable>string</replaceable>"/&gt; |
+                &lt;service name="<replaceable>string</replaceable>" [invert="<replaceable>True</replaceable>"]/&gt; |
                 &lt;port port="<replaceable>portid</replaceable>[-<replaceable>portid</replaceable>]" protocol="<literal>tcp</literal>|<literal>udp</literal>|<literal>sctp</literal>|<literal>dccp</literal>"/&gt; |
                 &lt;protocol value="<replaceable>protocol</replaceable>"/&gt; |
                 &lt;icmp-block name="<replaceable>icmptype</replaceable>"/&gt; |

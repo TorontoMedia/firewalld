@@ -142,7 +142,7 @@ destination [not] address="address[/mask]"|ipset="ipset"
       <title>Service</title>
       <para>
 	<programlisting>
-service name="service name"
+service [not] name="service name"
 	</programlisting>
       </para>
       <para>
@@ -150,6 +150,7 @@ service name="service name"
       </para>
       <para>
 	If a service provides a destination address, it will conflict with a destination address in the rule and will result in an error. The services using destination addresses internally are mostly services using multicast.
+      It is possible to invert the service by adding <option>not</option> before <option>name</option>.
       </para>
     </refsect2>
 
