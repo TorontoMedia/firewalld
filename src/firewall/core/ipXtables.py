@@ -21,6 +21,7 @@
 
 import os.path
 import copy
+from typing import Optional
 
 from firewall.core.prog import runProg
 from firewall.core.logger import log
@@ -30,7 +31,7 @@ from firewall import config
 from firewall.errors import FirewallError, INVALID_PASSTHROUGH, INVALID_RULE, UNKNOWN_ERROR, INVALID_ADDR
 from firewall.core.rich import Rich_Accept, Rich_Reject, Rich_Drop, Rich_Mark, Rich_NFLog, \
                                Rich_Masquerade, Rich_ForwardPort, Rich_IcmpBlock, Rich_Tcp_Mss_Clamp, \
-                               AddressFlag
+                               Rich_Rule, AddressFlag
 from firewall.core.base import DEFAULT_ZONE_TARGET
 import string
 
@@ -1163,15 +1164,21 @@ class ip4tables(object):
 
         return rule_fragment
 
-    def build_policy_ports_rules(self, enable, policy, proto, port, destination=None, rich_rule=None):
+    def build_policy_ports_rules(self, enable: bool, policy: str, proto: str,
+                                 port: Optional[str], destination: Optional[str] = None,
+                                 rich_rule: Optional[Rich_Rule] = None, invert: bool = False):
         add_del = { True: "-A", False: "-D" }[enable]
         table = "filter"
         _policy = self._fw.policy.policy_base_chain_name(policy, table, POLICY_CHAIN_PREFIX)
 
         rule_fragment = [ "-p", proto ]
         if port:
-            rule_fragment += [ "--dport", "%s" % portStr(port) ]
+            if invert:
+                rule_fragment.append("!")
+            rule_fragment += [ "--dport", f"{portStr(port)}" ]
         if destination:
+            if invert:
+                rule_fragment.append("!")
             rule_fragment += [ "-d", destination ]
         if rich_rule:
             rule_fragment += self._rich_rule_destination_fragment(rich_rule.destination)
@@ -1188,13 +1195,20 @@ class ip4tables(object):
 
         return rules
 
-    def build_policy_protocol_rules(self, enable, policy, protocol, destination=None, rich_rule=None):
+    def build_policy_protocol_rules(self, enable: bool, policy: str, protocol: str,
+                                    destination: Optional[str] = None, rich_rule: Optional[Rich_Rule] = None,
+                                    invert: bool = False):
         add_del = { True: "-A", False: "-D" }[enable]
         table = "filter"
         _policy = self._fw.policy.policy_base_chain_name(policy, table, POLICY_CHAIN_PREFIX)
 
-        rule_fragment = [ "-p", protocol ]
+        rule_fragment = []
+        if invert:
+            rule_fragment.append("!")
+        rule_fragment += [ "-p", protocol ]
         if destination:
+            if invert:
+                rule_fragment.append("!")
             rule_fragment += [ "-d", destination ]
         if rich_rule:
             rule_fragment += self._rich_rule_destination_fragment(rich_rule.destination)
@@ -1239,16 +1253,21 @@ class ip4tables(object):
                      + rule_fragment)
         return rules
 
-    def build_policy_source_ports_rules(self, enable, policy, proto, port,
-                                     destination=None, rich_rule=None):
+    def build_policy_source_ports_rules(self, enable: bool, policy: str, proto: str,
+                                        port: Optional[str], destination: Optional[str] = None,
+                                        rich_rule: Optional[Rich_Rule] = None, invert: bool = False):
         add_del = { True: "-A", False: "-D" }[enable]
         table = "filter"
         _policy = self._fw.policy.policy_base_chain_name(policy, table, POLICY_CHAIN_PREFIX)
 
         rule_fragment = [ "-p", proto ]
         if port:
-            rule_fragment += [ "--sport", "%s" % portStr(port) ]
+            if invert:
+                rule_fragment.append("!")
+            rule_fragment += [ "--sport", f"{portStr(port)}" ]
         if destination:
+            if invert:
+                rule_fragment.append("!")
             rule_fragment += [ "-d", destination ]
         if rich_rule:
             rule_fragment += self._rich_rule_destination_fragment(rich_rule.destination)
@@ -1265,15 +1284,15 @@ class ip4tables(object):
 
         return rules
 
-    def build_policy_helper_ports_rules(self, enable, policy, proto, port,
-                                      destination, helper_name, module_short_name):
+    def build_policy_helper_ports_rules(self, enable: bool, policy: str, proto: str, port: Optional[str],
+                                        destination: Optional[str], helper_name: str, module_short_name: str):
         table = "raw"
         _policy = self._fw.policy.policy_base_chain_name(policy, table, POLICY_CHAIN_PREFIX)
         add_del = { True: "-A", False: "-D" }[enable]
 
         rule = [ add_del, "%s_allow" % (_policy), "-t", "raw", "-p", proto ]
         if port:
-            rule += [ "--dport", "%s" % portStr(port) ]
+            rule += [ "--dport", f"{portStr(port)}" ]
         if destination:
             rule += [ "-d",  destination ]
         rule += [ "-j", "CT", "--helper", module_short_name ]

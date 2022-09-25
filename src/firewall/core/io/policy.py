@@ -44,7 +44,10 @@ def common_startElement(obj, name, attrs):
                             str(obj._rule))
                 obj._rule_error = True
                 return True
-            obj._rule.element = rich.Rich_Service(attrs["name"])
+            invert = False
+            if "invert" in attrs and parse_boolean(attrs["invert"]):
+                invert = True
+            obj._rule.element = rich.Service(attrs["name"], invert)
             return True
         if attrs["name"] not in obj.item.services:
             obj.item.services.append(attrs["name"])
@@ -579,9 +582,11 @@ def common_writer(obj, handler):
             element = ""
             attrs = { }
 
-            if type(rule.element) == rich.Rich_Service:
+            if type(rule.element) == rich.Service:
                 element = "service"
                 attrs["name"] = rule.element.name
+                if rule.element.invert:
+                    attrs["invert"] = "True"
             elif type(rule.element) == rich.Rich_Port:
                 element = "port"
                 attrs["port"] = rule.element.port
@@ -775,6 +780,7 @@ class Policy(IO_Object):
         "nflog": [ "group", "prefix", "queue-size" ],
         "reject": [ "type" ],
         "tcp-mss-clamp": [ "value" ],
+        "service": [ "invert" ]
     }
 
     def __init__(self):

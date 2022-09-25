@@ -10,7 +10,7 @@ from firewall.functions import portStr, checkIPnMask, checkIP6nMask, \
     portInPortRange, get_nf_conntrack_short_name, coalescePortRange, breakPortRange, \
     checkTcpMssClamp
 from firewall.core.rich import Rich_Rule, Rich_Accept, \
-    Rich_Service, Rich_Port, Rich_Protocol, \
+    Service, Port, Rich_Protocol, \
     Rich_Masquerade, Rich_ForwardPort, Rich_SourcePort, Rich_IcmpBlock, \
     Rich_IcmpType, Rich_Tcp_Mss_Clamp, AddressFlag
 from firewall.core.fw_transaction import FirewallTransaction
@@ -1360,7 +1360,7 @@ class FirewallPolicy(object):
 
         for backend in set([self._fw.get_backend_by_ipv(x) for x in ipvs]):
             # SERVICE
-            if type(rule.element) == Rich_Service:
+            if type(rule.element) == Service:
                 svc = self._fw.service.get_service(rule.element.name)
 
                 destinations = []
@@ -1377,8 +1377,8 @@ class FirewallPolicy(object):
                     destinations.append(None)
 
                 for destination in destinations:
-                    if type(rule.action) == Rich_Accept:
-                        # only load modules for accept action
+                    if type(rule.action) == Rich_Accept and not rule.element.invert:
+                        # only load modules for accept action if not inverted
                         helpers = self.get_helpers_for_service_modules(svc.modules,
                                                                        enable)
                         helpers += self.get_helpers_for_service_helpers(svc.helpers)
@@ -1406,28 +1406,28 @@ class FirewallPolicy(object):
                     # create rules
                     for (port,proto) in svc.ports:
                         rules = backend.build_policy_ports_rules(
-                                    enable, policy, proto, port, destination, rule)
+                                    enable, policy, proto, port, destination, rule, rule.element.invert)
                         transaction.add_rules(backend, rules)
 
                     for proto in svc.protocols:
                         rules = backend.build_policy_protocol_rules(
-                                    enable, policy, proto, destination, rule)
+                                    enable, policy, proto, destination, rule, rule.element.invert)
                         transaction.add_rules(backend, rules)
 
                     # create rules
                     for (port,proto) in svc.source_ports:
                         rules = backend.build_policy_source_ports_rules(
-                                    enable, policy, proto, port, destination, rule)
+                                    enable, policy, proto, port, destination, rule, rule.element.invert)
                         transaction.add_rules(backend, rules)
 
             # PORT
-            elif type(rule.element) == Rich_Port:
+            elif type(rule.element) == Port:
                 port = rule.element.port
                 protocol = rule.element.protocol
                 self.check_port(port, protocol)
 
                 rules = backend.build_policy_ports_rules(
-                            enable, policy, protocol, port, None, rule)
+                            enable, policy, protocol, port, None, rule, rule.element.invert)
                 transaction.add_rules(backend, rules)
 
             # PROTOCOL

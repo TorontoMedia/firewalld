@@ -97,6 +97,7 @@ class Zone(IO_Object):
         "nflog": [ "group", "prefix", "queue-size" ],
         "reject": [ "type" ],
         "tcp-mss-clamp": [ "value" ],
+        "service": [ "invert" ],
     }
 
     @staticmethod

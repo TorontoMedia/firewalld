@@ -21,6 +21,7 @@
 import copy
 import json
 import ipaddress
+from typing import Optional
 
 from firewall.core.logger import log
 from firewall.functions import check_mac, getPortRange, normalizeIP6, \
@@ -30,7 +31,7 @@ from firewall.errors import FirewallError, UNKNOWN_ERROR, INVALID_RULE, \
                             INVALID_PORT
 from firewall.core.rich import Rich_Accept, Rich_Reject, Rich_Drop, Rich_Mark, \
                                Rich_Masquerade, Rich_ForwardPort, Rich_IcmpBlock, \
-                               Rich_Tcp_Mss_Clamp, Rich_NFLog, AddressFlag
+                               Rich_Tcp_Mss_Clamp, Rich_NFLog, Rich_Rule, AddressFlag
 from firewall.core.base import DEFAULT_ZONE_TARGET
 from nftables.nftables import Nftables
 
@@ -1227,7 +1228,9 @@ class nftables(object):
         else:
             return {"range": [range[0], range[1]]}
 
-    def build_policy_ports_rules(self, enable, policy, proto, port, destination=None, rich_rule=None):
+    def build_policy_ports_rules(self, enable: bool, policy: str, proto: str,
+                                 port: Optional[str], destination: Optional[str] = None,
+                                 rich_rule: Optional[Rich_Rule] = None, invert: bool = False):
         add_del = { True: "add", False: "delete" }[enable]
         table = "filter"
         _policy = self._fw.policy.policy_base_chain_name(policy, table, POLICY_CHAIN_PREFIX)
@@ -1236,14 +1239,14 @@ class nftables(object):
         if rich_rule:
             expr_fragments.append(self._rich_rule_family_fragment(rich_rule.family))
         if destination:
-            expr_fragments.append(self._rule_addr_fragment("daddr", destination))
+            expr_fragments.append(self._rule_addr_fragment("daddr", destination, invert))
         if rich_rule:
             expr_fragments.append(self._rich_rule_destination_fragment(rich_rule.destination))
             expr_fragments.append(self._rich_rule_source_fragment(rich_rule.source))
 
         expr_fragments.append({"match": {"left": {"payload": {"protocol": proto,
                                                               "field": "dport"}},
-                                         "op": "==",
+                                         "op": "!=" if invert else "==",
                                          "right": self._port_fragment(port)}})
 
         rules = []
@@ -1259,7 +1262,9 @@ class nftables(object):
 
         return rules
 
-    def build_policy_protocol_rules(self, enable, policy, protocol, destination=None, rich_rule=None):
+    def build_policy_protocol_rules(self, enable: bool, policy: str, protocol: str,
+                                    destination: Optional[str] = None, rich_rule: Optional[Rich_Rule] = None,
+                                    invert: bool = False):
         add_del = { True: "add", False: "delete" }[enable]
         table = "filter"
         _policy = self._fw.policy.policy_base_chain_name(policy, table, POLICY_CHAIN_PREFIX)
@@ -1268,13 +1273,13 @@ class nftables(object):
         if rich_rule:
             expr_fragments.append(self._rich_rule_family_fragment(rich_rule.family))
         if destination:
-            expr_fragments.append(self._rule_addr_fragment("daddr", destination))
+            expr_fragments.append(self._rule_addr_fragment("daddr", destination, invert))
         if rich_rule:
             expr_fragments.append(self._rich_rule_destination_fragment(rich_rule.destination))
             expr_fragments.append(self._rich_rule_source_fragment(rich_rule.source))
 
         expr_fragments.append({"match": {"left": {"meta": {"key": "l4proto"}},
-                                         "op": "==",
+                                         "op": "!=" if invert else "==",
                                          "right": protocol}})
 
         rules = []
@@ -1320,8 +1325,9 @@ class nftables(object):
 
         return rules
 
-    def build_policy_source_ports_rules(self, enable, policy, proto, port,
-                                      destination=None, rich_rule=None):
+    def build_policy_source_ports_rules(self, enable: bool, policy: str, proto: str,
+                                        port: Optional[str], destination: Optional[str] = None,
+                                        rich_rule: Optional[Rich_Rule] = None, invert: bool = False):
         add_del = { True: "add", False: "delete" }[enable]
         table = "filter"
         _policy = self._fw.policy.policy_base_chain_name(policy, table, POLICY_CHAIN_PREFIX)
@@ -1330,14 +1336,14 @@ class nftables(object):
         if rich_rule:
             expr_fragments.append(self._rich_rule_family_fragment(rich_rule.family))
         if destination:
-            expr_fragments.append(self._rule_addr_fragment("daddr", destination))
+            expr_fragments.append(self._rule_addr_fragment("daddr", destination, invert))
         if rich_rule:
             expr_fragments.append(self._rich_rule_destination_fragment(rich_rule.destination))
             expr_fragments.append(self._rich_rule_source_fragment(rich_rule.source))
 
         expr_fragments.append({"match": {"left": {"payload": {"protocol": proto,
                                                               "field": "sport"}},
-                                         "op": "==",
+                                         "op": "!=" if invert else "==",
                                          "right": self._port_fragment(port)}})
 
         rules = []
@@ -1353,8 +1359,8 @@ class nftables(object):
 
         return rules
 
-    def build_policy_helper_ports_rules(self, enable, policy, proto, port,
-                                        destination, helper_name, module_short_name):
+    def build_policy_helper_ports_rules(self, enable: bool, policy: str, proto: str, port: Optional[str],
+                                        destination: Optional[str], helper_name: str, module_short_name: str):
         table = "filter"
         _policy = self._fw.policy.policy_base_chain_name(policy, table, POLICY_CHAIN_PREFIX)
         add_del = { True: "add", False: "delete" }[enable]
