@@ -98,6 +98,7 @@ class Zone(IO_Object):
         "reject": [ "type" ],
         "tcp-mss-clamp": [ "value" ],
         "service": [ "invert" ],
+        "port": [ "invert" ],
     }
 
     @staticmethod

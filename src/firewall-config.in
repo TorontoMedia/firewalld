@@ -2069,7 +2069,7 @@ class FirewallConfig(object):
         if obj.element:
             if type(obj.element) == rich.Service:
                 elem = _("service") + "\n" + obj.element.name
-            elif type(obj.element) == rich.Rich_Port:
+            elif type(obj.element) == rich.Port:
                 elem = _("port") + "\n%s/%s" % (obj.element.port,
                                                 obj.element.protocol)
             elif type(obj.element) == rich.Rich_Protocol:
@@ -3164,7 +3164,7 @@ class FirewallConfig(object):
                 self.richRuleDialogElementChooser.set_text( \
                     old_obj.element.name)
 
-            elif type(old_obj.element) == rich.Rich_Port:
+            elif type(old_obj.element) == rich.Port:
                 combobox_select_text(self.richRuleDialogElementCombobox,
                                      _("port"))
                 self.richRuleDialogElementChooser.set_text( \
@@ -3663,7 +3663,7 @@ class FirewallConfig(object):
                         (port, proto) = text.split("/")
                 except:
                     return None
-                rule.element = rich.Rich_Port(port, proto)
+                rule.element = rich.Port(port, proto)
             elif combolabel == _("protocol"):
                 rule.element = rich.Rich_Protocol(
                     self.richRuleDialogElementChooser.get_text())

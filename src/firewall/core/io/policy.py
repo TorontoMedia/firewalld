@@ -62,8 +62,10 @@ def common_startElement(obj, name, attrs):
                             str(obj._rule))
                 obj._rule_error = True
                 return True
-            obj._rule.element = rich.Rich_Port(attrs["port"],
-                                                attrs["protocol"])
+            invert = False
+            if "invert" in attrs and parse_boolean(attrs["invert"]):
+                invert = True
+            obj._rule.element = rich.Port(attrs["port"], attrs["protocol"], invert)
             return True
         check_port(attrs["port"])
         check_tcpudp(attrs["protocol"])
@@ -587,10 +589,12 @@ def common_writer(obj, handler):
                 attrs["name"] = rule.element.name
                 if rule.element.invert:
                     attrs["invert"] = "True"
-            elif type(rule.element) == rich.Rich_Port:
+            elif type(rule.element) == rich.Port:
                 element = "port"
                 attrs["port"] = rule.element.port
                 attrs["protocol"] = rule.element.protocol
+                if rule.element.invert:
+                    attrs["invert"] = "True"
             elif type(rule.element) == rich.Rich_Protocol:
                 element = "protocol"
                 attrs["value"] = rule.element.value
@@ -780,7 +784,8 @@ class Policy(IO_Object):
         "nflog": [ "group", "prefix", "queue-size" ],
         "reject": [ "type" ],
         "tcp-mss-clamp": [ "value" ],
-        "service": [ "invert" ]
+        "service": [ "invert" ],
+        "port": [ "invert" ],
     }
 
     def __init__(self):
