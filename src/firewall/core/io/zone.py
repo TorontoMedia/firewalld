@@ -99,6 +99,7 @@ class Zone(IO_Object):
         "tcp-mss-clamp": [ "value" ],
         "service": [ "invert" ],
         "port": [ "invert" ],
+        "source-port": [ "invert" ],
     }
 
     @staticmethod

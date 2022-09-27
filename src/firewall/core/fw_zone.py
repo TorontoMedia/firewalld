@@ -34,7 +34,7 @@ from firewall.core.rich import (
     Rich_Protocol,
     Rich_Rule,
     Service,
-    Rich_SourcePort,
+    SourcePort,
     Rich_Tcp_Mss_Clamp
 )
 from firewall.core.fw_nm import nm_get_bus_name
@@ -834,7 +834,7 @@ class FirewallZone(object):
         if type(rule.action) == Rich_Mark:
             return [self.policy_name_from_zones(zone, "ANY")]
         elif type(rule.element) in [Service, Port, Rich_Protocol,
-                                    Rich_SourcePort, Rich_IcmpBlock, Rich_IcmpType]:
+                                    SourcePort, Rich_IcmpBlock, Rich_IcmpType]:
             return [self.policy_name_from_zones(zone, "HOST")]
         elif type(rule.element) in [Rich_ForwardPort]:
             return [self.policy_name_from_zones(zone, "ANY")]

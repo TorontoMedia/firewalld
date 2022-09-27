@@ -22,7 +22,7 @@
 __all__ = [ "Source", "Destination", "Service", "Port",
             "Rich_Protocol", "Rich_Masquerade", "Rich_IcmpBlock",
             "Rich_IcmpType",
-            "Rich_SourcePort", "Rich_ForwardPort", "Rich_Log", "Rich_NFLog",
+            "SourcePort", "Rich_ForwardPort", "Rich_Log", "Rich_NFLog",
             "Rich_Accept", "Rich_Reject", "Rich_Drop", "Rich_Mark",
             "Rich_Audit", "Rich_Limit", "Rich_Rule", "Rich_Tcp_Mss_Clamp",
             "AddressFlag", "InversionFlag" ]
@@ -55,6 +55,7 @@ class InversionFlag(IntFlag):
     SERVICE = 1 << 3
     PORT = 1 << 4
     PROTOCOL = 1 << 5
+    SOURCE_PORT = 1 << 6
 
     @classmethod
     def get(cls, flag: str):
@@ -112,10 +113,14 @@ class Port:
     def __str__(self) -> str:
         return f'port{(" NOT" if self.invert else "")} port="{self.port}" protocol="{self.protocol}"'
 
-class Rich_SourcePort(Port):
-    def __str__(self):
-        return 'source-port port="%s" protocol="%s"' % (self.port,
-                                                        self.protocol)
+@dataclass
+class SourcePort:
+    port: str
+    protocol: str
+    invert: bool = False
+
+    def __str__(self) -> str:
+        return f'source-port{(" NOT" if self.invert else "")} port="{self.port}" protocol="{self.protocol}"'
 
 class Rich_Protocol(object):
     def __init__(self, value):
@@ -479,7 +484,7 @@ class Rich_Rule(object):
                 elif element in ['not', 'NOT']:
                     if tokens[index + 1].get('attr_name') in ['address', 'mac', 'ipset']:
                         inversions |= InversionFlag.SOURCE
-                    elif tokens[index + 1].get('element') in ['destination', 'port', 'service']:
+                    elif tokens[index + 1].get('element') in ['destination', 'port', 'service', 'source-port']:
                         inversions |= InversionFlag.get(tokens[index + 1]['element'])
                 else:
                     try:
@@ -505,7 +510,7 @@ class Rich_Rule(object):
                 elif element in ['not', 'NOT']:
                     if tokens[index + 1].get('attr_name') in ['address', 'ipset']:
                         inversions |= InversionFlag.DESTINATION
-                    elif tokens[index + 1].get('element') in ['port', 'service', 'source']:
+                    elif tokens[index + 1].get('element') in ['port', 'service', 'source', 'source-port']:
                         inversions |= InversionFlag.get(tokens[index + 1]['element'])
                 else:
                     try:
@@ -544,7 +549,7 @@ class Rich_Rule(object):
                 elif element in ['not', 'NOT']:
                     if tokens[index + 1].get('attr_name') == 'name':
                         inversions |= InversionFlag.SERVICE
-                    elif tokens[index + 1].get('element') in ['destination', 'port', 'source']:
+                    elif tokens[index + 1].get('element') in ['destination', 'port', 'source', 'source-port']:
                         inversions |= InversionFlag.get(tokens[index + 1]['element'])
                 else:
                     try:
@@ -567,7 +572,7 @@ class Rich_Rule(object):
                 elif element in ['not', 'NOT']:
                     if tokens[index + 1].get('attr_name') == 'port':
                         inversions |= InversionFlag.PORT
-                    elif tokens[index + 1].get('element') in ['destination', 'service', 'source']:
+                    elif tokens[index + 1].get('element') in ['destination', 'service', 'source', 'source-port']:
                         inversions |= InversionFlag.get(tokens[index + 1]['element'])
                 else:
                     try:
@@ -605,8 +610,21 @@ class Rich_Rule(object):
             elif in_element == 'source-port':
                 if attr_name in ['port', 'protocol']:
                     attrs[attr_name] = attr_value
+                elif attr_name == 'invert':
+                    if functions.parse_boolean(attr_value):
+                        inversions |= InversionFlag.SOURCE_PORT
+                    else:
+                        inversions &= ~InversionFlag.SOURCE_PORT
+                elif element in ['not', 'NOT']:
+                    if tokens[index + 1].get('attr_name') == 'port':
+                        inversions |= InversionFlag.SOURCE_PORT
+                    elif tokens[index + 1].get('element') in ['destination', 'port', 'service', 'source']:
+                        inversions |= InversionFlag.get(tokens[index + 1]['element'])
                 else:
-                    self.element = Rich_SourcePort(attrs.get('port'), attrs.get('protocol'))
+                    try:
+                        self.element = SourcePort(attrs['port'], attrs['protocol'], bool(inversions & InversionFlag.SOURCE_PORT))
+                    except KeyError as exc:
+                        raise FirewallError(errors.INVALID_RULE, "invalid 'source-port' element.") from exc
                     in_elements.pop() # source-port
                     attrs.clear()
                     index = index -1 # return token to input
@@ -820,7 +838,7 @@ class Rich_Rule(object):
                 raise FirewallError(errors.INVALID_RULE, "forward-port and action")
 
         # source-port
-        elif type(self.element) == Rich_SourcePort:
+        elif type(self.element) == SourcePort:
             if not functions.check_port(self.element.port):
                 raise FirewallError(errors.INVALID_PORT, self.element.port)
             if self.element.protocol not in [ "tcp", "udp", "sctp", "dccp" ]:

@@ -11,7 +11,7 @@ from firewall.functions import portStr, checkIPnMask, checkIP6nMask, \
     checkTcpMssClamp
 from firewall.core.rich import Rich_Rule, Rich_Accept, \
     Service, Port, Rich_Protocol, \
-    Rich_Masquerade, Rich_ForwardPort, Rich_SourcePort, Rich_IcmpBlock, \
+    Rich_Masquerade, Rich_ForwardPort, SourcePort, Rich_IcmpBlock, \
     Rich_IcmpType, Rich_Tcp_Mss_Clamp, AddressFlag
 from firewall.core.fw_transaction import FirewallTransaction
 from firewall import errors
@@ -1476,13 +1476,13 @@ class FirewallPolicy(object):
                 transaction.add_rules(backend, rules)
 
             # SOURCE PORT
-            elif type(rule.element) == Rich_SourcePort:
+            elif type(rule.element) == SourcePort:
                 port = rule.element.port
                 protocol = rule.element.protocol
                 self.check_port(port, protocol)
 
                 rules = backend.build_policy_source_ports_rules(
-                            enable, policy, protocol, port, None, rule)
+                            enable, policy, protocol, port, None, rule, rule.element.invert)
                 transaction.add_rules(backend, rules)
 
             # ICMP BLOCK and ICMP TYPE

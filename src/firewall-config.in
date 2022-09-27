@@ -2084,7 +2084,7 @@ class FirewallConfig(object):
                 elem = _("forward-port") + "\n%s" % self.create_fwp_string(
                     obj.element.port, obj.element.protocol,
                     obj.element.to_port, obj.element.to_address)
-            elif type(obj.element) == rich.Rich_SourcePort:
+            elif type(obj.element) == rich.SourcePort:
                 elem = _("source-port") + "\n%s/%s" % (obj.element.port,
                                                        obj.element.protocol)
             else:
@@ -3196,7 +3196,7 @@ class FirewallConfig(object):
                 if old_obj.element.to_address != "":
                     s += " @%s" % old_obj.element.to_address
                 self.richRuleDialogElementChooser.set_text(s)
-            elif type(old_obj.element) == rich.Rich_SourcePort:
+            elif type(old_obj.element) == rich.SourcePort:
                 combobox_select_text(self.richRuleDialogElementCombobox,
                                      _("source-port"))
                 self.richRuleDialogElementChooser.set_text( \
@@ -3692,7 +3692,7 @@ class FirewallConfig(object):
                         (port, proto) = text.split("/")
                 except:
                     return None
-                rule.element = rich.Rich_SourcePort(port, proto)
+                rule.element = rich.SourcePort(port, proto)
 
         # action
         if self.richRuleDialogActionCheck.is_sensitive() and \

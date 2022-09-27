@@ -209,8 +209,10 @@ def common_startElement(obj, name, attrs):
                             str(obj._rule))
                 obj._rule_error = True
                 return True
-            obj._rule.element = rich.Rich_SourcePort(attrs["port"],
-                                                      attrs["protocol"])
+            invert = False
+            if "invert" in attrs and parse_boolean(attrs["invert"]):
+                invert = True
+            obj._rule.element = rich.SourcePort(attrs["port"], attrs["protocol"], invert)
             return True
         check_port(attrs["port"])
         check_tcpudp(attrs["protocol"])
@@ -617,10 +619,12 @@ def common_writer(obj, handler):
                     attrs["to-port"] = rule.element.to_port
                 if rule.element.to_address != "":
                     attrs["to-addr"] = rule.element.to_address
-            elif type(rule.element) == rich.Rich_SourcePort:
+            elif type(rule.element) == rich.SourcePort:
                 element = "source-port"
                 attrs["port"] = rule.element.port
                 attrs["protocol"] = rule.element.protocol
+                if rule.element.invert:
+                    attrs["invert"] = "True"
             else:
                 raise FirewallError(
                     errors.INVALID_OBJECT,
@@ -786,6 +790,7 @@ class Policy(IO_Object):
         "tcp-mss-clamp": [ "value" ],
         "service": [ "invert" ],
         "port": [ "invert" ],
+        "source-port": [ "invert" ],
     }
 
     def __init__(self):
