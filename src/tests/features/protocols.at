@@ -10,19 +10,23 @@ FWD_CHECK([--permanent --policy=foobar --add-protocol ipv6-icmp], 0, [ignore])
 FWD_CHECK([--permanent --policy=foobar --add-protocol dccp], 0, [ignore])
 FWD_CHECK([--permanent --policy=foobar --add-protocol gre], 0, [ignore])
 FWD_CHECK([--permanent --policy=foobar --add-rich-rule='rule protocol value="sctp" accept'], 0, [ignore])
+FWD_CHECK([--permanent --policy=foobar --add-rich-rule='rule family=ipv4 source not address="10.10.10.0/24" not protocol value=tcp accept'], 0, [ignore])
 FWD_CHECK([--permanent --policy foobar --query-protocol ipv6-icmp], 0, ignore)
 FWD_CHECK([--permanent --policy foobar --query-protocol dccp], 0, ignore)
 FWD_CHECK([--permanent --policy foobar --query-protocol gre], 0, ignore)
 FWD_CHECK([--permanent --policy=foobar --query-rich-rule='rule protocol value="sctp" accept'], 0, [ignore])
+FWD_CHECK([--permanent --policy=foobar --query-rich-rule='rule family=ipv4 source not address="10.10.10.0/24" not protocol value=tcp accept'], 0, [ignore])
 FWD_RELOAD
 FWD_CHECK([--policy foobar --query-protocol ipv6-icmp], 0, ignore)
 FWD_CHECK([--policy foobar --query-protocol dccp], 0, ignore)
 FWD_CHECK([--policy foobar --query-protocol gre], 0, ignore)
 FWD_CHECK([--policy=foobar --query-rich-rule='rule protocol value="sctp" accept'], 0, [ignore])
+FWD_CHECK([--policy=foobar --query-rich-rule='rule family=ipv4 source not address="10.10.10.0/24" not protocol value=tcp accept'], 0, [ignore])
 NFT_LIST_RULES([inet], [filter_IN_policy_foobar_allow], 0, [dnl
     table inet firewalld {
         chain filter_IN_policy_foobar_allow {
             meta l4proto sctp accept
+            ip saddr != 10.10.10.0/24 meta l4proto != tcp accept
             meta l4proto ipv6-icmp accept
             meta l4proto dccp accept
             meta l4proto gre accept
@@ -31,9 +35,10 @@ NFT_LIST_RULES([inet], [filter_IN_policy_foobar_allow], 0, [dnl
 ])
 IPTABLES_LIST_RULES([filter], [IN_foobar_allow], 0, [dnl
     ACCEPT sctp -- 0.0.0.0/0 0.0.0.0/0 
+    ACCEPT !tcp -- !10.10.10.0/24 0.0.0.0/0
     ACCEPT icmpv6-- 0.0.0.0/0 0.0.0.0/0 
     ACCEPT 33 -- 0.0.0.0/0 0.0.0.0/0 
-    ACCEPT 47 -- 0.0.0.0/0 0.0.0.0/0 
+    ACCEPT 47 -- 0.0.0.0/0 0.0.0.0/0     
 ])
 IP6TABLES_LIST_RULES([filter], [IN_foobar_allow], 0, [dnl
     ACCEPT sctp ::/0 ::/0 
@@ -47,12 +52,14 @@ FWD_CHECK([--permanent --policy foobar --query-protocol dccp], 0, [ignore])
 FWD_CHECK([--permanent --policy=foobar --remove-protocol dccp], 0, [ignore])
 FWD_CHECK([--permanent --policy=foobar --remove-protocol gre], 0, [ignore])
 FWD_CHECK([--permanent --policy=foobar --remove-rich-rule='rule protocol value="sctp" accept'], 0, [ignore])
+FWD_CHECK([--permanent --policy=foobar --remove-rich-rule='rule family=ipv4 source not address="10.10.10.0/24" not protocol value=tcp accept'], 0, [ignore])
 FWD_CHECK([--policy=foobar --remove-protocol ipv6-icmp], 0, [ignore])
 FWD_CHECK([--policy foobar --query-protocol ipv6-icmp], 1, [ignore])
 FWD_CHECK([--policy foobar --query-protocol dccp], 0, [ignore])
 FWD_CHECK([--policy=foobar --remove-protocol dccp], 0, [ignore])
 FWD_CHECK([--policy=foobar --remove-protocol gre], 0, [ignore])
 FWD_CHECK([--policy=foobar --remove-rich-rule='rule protocol value="sctp" accept'], 0, [ignore])
+FWD_CHECK([--policy=foobar --remove-rich-rule='rule family=ipv4 source not address="10.10.10.0/24" not protocol value=tcp accept'], 0, [ignore])
 
 dnl runtime --> permanent
 m4_ifdef([TESTING_FIREWALL_OFFLINE_CMD], [], [
