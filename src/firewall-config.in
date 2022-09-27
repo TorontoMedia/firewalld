@@ -2078,7 +2078,7 @@ class FirewallConfig(object):
                 elem = _("masquerade")
             elif type(obj.element) == rich.IcmpBlock:
                 elem = _("icmp-block") + "\n%s" % obj.element.name
-            elif type(obj.element) == rich.Rich_IcmpType:
+            elif type(obj.element) == rich.IcmpType:
                 elem = _("icmp-type") + "\n%s" % obj.element.name
             elif type(obj.element) == rich.Rich_ForwardPort:
                 elem = _("forward-port") + "\n%s" % self.create_fwp_string(
@@ -3182,7 +3182,7 @@ class FirewallConfig(object):
                                      _("icmp-block"))
                 self.richRuleDialogElementChooser.set_text( \
                     old_obj.element.name)
-            elif type(old_obj.element) == rich.Rich_IcmpType:
+            elif type(old_obj.element) == rich.IcmpType:
                 combobox_select_text(self.richRuleDialogElementCombobox,
                                      _("icmp-type"))
                 self.richRuleDialogElementChooser.set_text( \
@@ -3671,7 +3671,7 @@ class FirewallConfig(object):
                 rule.element = rich.IcmpBlock(
                     self.richRuleDialogElementChooser.get_text())
             elif combolabel == _("icmp-type"):
-                rule.element = rich.Rich_IcmpType(
+                rule.element = rich.IcmpType(
                     self.richRuleDialogElementChooser.get_text())
             elif combolabel == _("forward-port"):
                 text = self.richRuleDialogElementChooser.get_text()

@@ -12,7 +12,7 @@ from firewall.functions import portStr, checkIPnMask, checkIP6nMask, \
 from firewall.core.rich import Rich_Rule, Rich_Accept, \
     Service, Port, Protocol, \
     Masquerade, Rich_ForwardPort, SourcePort, IcmpBlock, \
-    Rich_IcmpType, Rich_Tcp_Mss_Clamp, AddressFlag
+    IcmpType, Rich_Tcp_Mss_Clamp, AddressFlag
 from firewall.core.fw_transaction import FirewallTransaction
 from firewall import errors
 from firewall.errors import FirewallError
@@ -1333,7 +1333,7 @@ class FirewallPolicy(object):
         ipvs = []
         if rule.family:
             ipvs = [ rule.family ]
-        elif rule.element and (isinstance(rule.element, IcmpBlock) or isinstance(rule.element, Rich_IcmpType)):
+        elif rule.element and (isinstance(rule.element, IcmpBlock) or isinstance(rule.element, IcmpType)):
             ict = self._fw.config.get_icmptype(rule.element.name)
             if ict.destination:
                 ipvs = [ipv for ipv in ["ipv4", "ipv6"] if ipv in ict.destination]
@@ -1487,7 +1487,7 @@ class FirewallPolicy(object):
 
             # ICMP BLOCK and ICMP TYPE
             elif type(rule.element) == IcmpBlock or \
-                 type(rule.element) == Rich_IcmpType:
+                 type(rule.element) == IcmpType:
                 ict = self._fw.config.get_icmptype(rule.element.name)
 
                 if rule.family and ict.destination and \

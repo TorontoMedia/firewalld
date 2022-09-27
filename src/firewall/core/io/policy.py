@@ -150,7 +150,10 @@ def common_startElement(obj, name, attrs):
                             str(obj._rule))
                 obj._rule_error = True
                 return True
-            obj._rule.element = rich.Rich_IcmpType(attrs["name"])
+            invert = False
+            if "invert" in attrs and parse_boolean(attrs["invert"]):
+                invert = True
+            obj._rule.element = rich.IcmpType(attrs["name"], invert)
             return True
         else:
             log.warning("Invalid rule: icmp-block '%s' outside of rule",
@@ -460,7 +463,7 @@ def common_check_config(obj, config, item, all_config, all_io_objects):
             obj_rich = rich.Rich_Rule(rule_str=rule)
             if obj_rich.element and "icmptypes" in all_io_objects and \
               (isinstance(obj_rich.element, rich.IcmpBlock) or
-               isinstance(obj_rich.element, rich.Rich_IcmpType)):
+               isinstance(obj_rich.element, rich.IcmpType)):
                 existing_icmptypes = all_io_objects["icmptypes"]
                 if obj_rich.element.name not in existing_icmptypes:
                     ex = FirewallError(errors.INVALID_ICMPTYPE,
@@ -618,9 +621,11 @@ def common_writer(obj, handler):
                 attrs["name"] = rule.element.name
                 if rule.element.invert:
                     attrs["invert"] = "True"
-            elif type(rule.element) == rich.Rich_IcmpType:
+            elif type(rule.element) == rich.IcmpType:
                 element = "icmp-type"
                 attrs["name"] = rule.element.name
+                if rule.element.invert:
+                    attrs["invert"] = "True"
             elif type(rule.element) == rich.Rich_ForwardPort:
                 element = "forward-port"
                 attrs["port"] = rule.element.port
@@ -803,6 +808,7 @@ class Policy(IO_Object):
         "source-port": [ "invert" ],
         "protocol": [ "invert" ],
         "icmp-block": [ "invert" ],
+        "icmp-type": [ "invert" ],
     }
 
     def __init__(self):
