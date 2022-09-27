@@ -145,6 +145,7 @@ IPTABLES_LIST_RULES([filter], [IN_foobar_pre], 0, [dnl
 IPTABLES_LIST_RULES([filter], [IN_foobar_allow], 0, [dnl
     ACCEPT all -- 10.10.10.10 0.0.0.0/0
     ACCEPT all -- 10.10.10.11 0.0.0.0/0
+    ACCEPT all -- 10.10.10.11 0.0.0.0/0
     ACCEPT udp -- !10.10.10.0/24 0.0.0.0/0 udp dpt:!10080
     ACCEPT tcp -- !10.10.10.0/24 0.0.0.0/0 tcp dpt:!10080
 ])
@@ -159,15 +160,18 @@ dnl icmp-type
 dnl
 FWD_CHECK([--permanent --policy foobar --add-rich-rule='rule priority=-1 icmp-type name="neighbour-advertisement" accept'], 0, ignore)
 FWD_CHECK([--permanent --policy foobar --add-rich-rule='rule priority=-2 icmp-type name="echo-request" accept'], 0, ignore)
+FWD_CHECK([--permanent --policy foobar --add-rich-rule='rule priority=-3 icmp-type not name="destination-unreachable" accept'], 0, ignore)
 FWD_RELOAD
 NFT_LIST_RULES([inet], [filter_IN_policy_foobar_pre], 0, [dnl
     table inet firewalld {
         chain filter_IN_policy_foobar_pre {
             ip6 daddr 1234::4444 ip6 saddr 1234::4321 drop
             ip daddr 10.20.20.23 ip saddr 10.20.20.22 drop
+            icmp type != destination-unreachable accept
+            icmpv6 type != destination-unreachable accept
             ip daddr 10.20.20.21 accept
             icmp echo-request accept
-            icmpv6 echo-request accept
+            icmpv6 echo-request accept            
             ip saddr 10.10.10.14 accept
             ip saddr 10.20.20.20 accept
             icmpv6 nd-neighbor-advert accept
@@ -176,6 +180,7 @@ NFT_LIST_RULES([inet], [filter_IN_policy_foobar_pre], 0, [dnl
 ])
 IPTABLES_LIST_RULES([filter], [IN_foobar_pre], 0, [dnl
     DROP all -- 10.20.20.22 10.20.20.23
+    ACCEPT icmp -- 0.0.0.0/0 0.0.0.0/0 icmp !type 3
     ACCEPT all -- 0.0.0.0/0 10.20.20.21
     ACCEPT icmp -- 0.0.0.0/0 0.0.0.0/0 icmptype 8
     ACCEPT all -- 10.10.10.14 0.0.0.0/0
@@ -183,8 +188,9 @@ IPTABLES_LIST_RULES([filter], [IN_foobar_pre], 0, [dnl
 ])
 IP6TABLES_LIST_RULES([filter], [IN_foobar_pre], 0, [dnl
     DROP all 1234::4321 1234::4444
+    ACCEPT icmpv6 ::/0 ::/0 icmpv6 !type 1
     ACCEPT icmpv6 ::/0 ::/0 ipv6-icmptype 128
-    ACCEPT icmpv6 ::/0 ::/0 ipv6-icmptype 136
+    ACCEPT icmpv6 ::/0 ::/0 ipv6-icmptype 136    
 ])
 
 FWD_CHECK([--permanent --policy=foobar --remove-egress-zone HOST], 0, [ignore])
