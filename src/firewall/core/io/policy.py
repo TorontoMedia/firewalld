@@ -160,7 +160,7 @@ def common_startElement(obj, name, attrs):
                             str(obj._rule))
                 obj._rule_error = True
                 return True
-            obj._rule.element = rich.Rich_Masquerade()
+            obj._rule.element = rich.Masquerade()
         else:
             if obj.item.masquerade:
                 log.warning("Masquerade already set, ignoring.")
@@ -608,7 +608,7 @@ def common_writer(obj, handler):
             elif type(rule.element) == rich.Rich_Tcp_Mss_Clamp:
                 element = "tcp-mss-clamp"
                 attrs["value"] = rule.element.value
-            elif type(rule.element) == rich.Rich_Masquerade:
+            elif type(rule.element) == rich.Masquerade:
                 element = "masquerade"
             elif type(rule.element) == rich.Rich_IcmpBlock:
                 element = "icmp-block"
@@ -910,7 +910,7 @@ class Policy(IO_Object):
         elif item == "rich_rules":
             for rule in config:
                 obj = rich.Rich_Rule(rule_str=rule)
-                if obj.element and isinstance(obj.element, rich.Rich_Masquerade):
+                if obj.element and isinstance(obj.element, rich.Masquerade):
                     if "egress_zones" in all_config and "HOST" in all_config["egress_zones"]:
                         raise FirewallError(errors.INVALID_ZONE,
                                 "Policy '{}': 'masquerade' is invalid for egress zone 'HOST'".format(

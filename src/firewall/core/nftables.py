@@ -30,7 +30,7 @@ from firewall.errors import FirewallError, UNKNOWN_ERROR, INVALID_RULE, \
                             INVALID_ICMPTYPE, INVALID_TYPE, INVALID_ENTRY, \
                             INVALID_PORT
 from firewall.core.rich import Rich_Accept, Rich_Reject, Rich_Drop, Rich_Mark, \
-                               Rich_Masquerade, Rich_ForwardPort, Rich_IcmpBlock, \
+                               Masquerade, Rich_ForwardPort, Rich_IcmpBlock, \
                                Rich_Tcp_Mss_Clamp, Rich_NFLog, Rich_Rule, AddressFlag
 from firewall.core.base import DEFAULT_ZONE_TARGET
 from nftables.nftables import Nftables
@@ -1023,7 +1023,7 @@ class nftables(object):
                           "per": rich_to_nft[limit.value[i+1]]}}
 
     def _rich_rule_chain_suffix(self, rich_rule):
-        if type(rich_rule.element) in [Rich_Masquerade, Rich_ForwardPort, Rich_IcmpBlock, Rich_Tcp_Mss_Clamp]:
+        if type(rich_rule.element) in [Masquerade, Rich_ForwardPort, Rich_IcmpBlock, Rich_Tcp_Mss_Clamp]:
             # These are special and don't have an explicit action
             pass
         elif rich_rule.action:
@@ -1033,7 +1033,7 @@ class nftables(object):
             raise FirewallError(INVALID_RULE, "No rule action specified.")
 
         if rich_rule.priority == 0:
-            if type(rich_rule.element) in [Rich_Masquerade, Rich_ForwardPort, Rich_Tcp_Mss_Clamp] or \
+            if type(rich_rule.element) in [Masquerade, Rich_ForwardPort, Rich_Tcp_Mss_Clamp] or \
                type(rich_rule.action) in [Rich_Accept, Rich_Mark]:
                 return "allow"
             elif type(rich_rule.element) in [Rich_IcmpBlock] or \

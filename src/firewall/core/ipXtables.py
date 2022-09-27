@@ -30,7 +30,7 @@ from firewall.functions import tempFile, readfile, splitArgs, check_mac, portStr
 from firewall import config
 from firewall.errors import FirewallError, INVALID_PASSTHROUGH, INVALID_RULE, UNKNOWN_ERROR, INVALID_ADDR
 from firewall.core.rich import Rich_Accept, Rich_Reject, Rich_Drop, Rich_Mark, Rich_NFLog, \
-                               Rich_Masquerade, Rich_ForwardPort, Rich_IcmpBlock, Rich_Tcp_Mss_Clamp, \
+                               Masquerade, Rich_ForwardPort, Rich_IcmpBlock, Rich_Tcp_Mss_Clamp, \
                                Rich_Rule, AddressFlag
 from firewall.core.base import DEFAULT_ZONE_TARGET
 import string
@@ -984,7 +984,7 @@ class ip4tables(object):
         return []
 
     def _rich_rule_chain_suffix(self, rich_rule):
-        if type(rich_rule.element) in [Rich_Masquerade, Rich_ForwardPort, Rich_IcmpBlock, Rich_Tcp_Mss_Clamp]:
+        if type(rich_rule.element) in [Masquerade, Rich_ForwardPort, Rich_IcmpBlock, Rich_Tcp_Mss_Clamp]:
             # These are special and don't have an explicit action
             pass
         elif rich_rule.action:
@@ -994,7 +994,7 @@ class ip4tables(object):
             raise FirewallError(INVALID_RULE, "No rule action specified.")
 
         if rich_rule.priority == 0:
-            if type(rich_rule.element) in [Rich_Masquerade, Rich_ForwardPort, Rich_Tcp_Mss_Clamp] or \
+            if type(rich_rule.element) in [Masquerade, Rich_ForwardPort, Rich_Tcp_Mss_Clamp] or \
                type(rich_rule.action) in [Rich_Accept, Rich_Mark]:
                 return "allow"
             elif type(rich_rule.element) in [Rich_IcmpBlock] or \

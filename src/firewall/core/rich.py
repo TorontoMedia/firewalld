@@ -20,7 +20,7 @@
 #
 
 __all__ = [ "Source", "Destination", "Service", "Port",
-            "Protocol", "Rich_Masquerade", "Rich_IcmpBlock",
+            "Protocol", "Masquerade", "Rich_IcmpBlock",
             "Rich_IcmpType",
             "SourcePort", "Rich_ForwardPort", "Rich_Log", "Rich_NFLog",
             "Rich_Accept", "Rich_Reject", "Rich_Drop", "Rich_Mark",
@@ -130,11 +130,9 @@ class Protocol:
     def __str__(self) -> str:
         return f'protocol{(" NOT" if self.invert else "")} value="{self.value}"'
 
-class Rich_Masquerade(object):
-    def __init__(self):
-        pass
-
-    def __str__(self):
+@dataclass
+class Masquerade:
+    def __str__(self) -> str:
         return 'masquerade'
 
 class Rich_IcmpBlock(object):
@@ -611,7 +609,7 @@ class Rich_Rule(object):
                 else:
                     raise FirewallError(errors.INVALID_RULE, "invalid 'icmp-type' element")
             elif in_element == 'masquerade':
-                self.element = Rich_Masquerade()
+                self.element = Masquerade()
                 in_elements.pop()
                 attrs.clear()
                 index = index -1 # return token to input
@@ -743,7 +741,7 @@ class Rich_Rule(object):
 
         if type(self.element) not in [ Rich_IcmpBlock,
                                        Rich_ForwardPort,
-                                       Rich_Masquerade,
+                                       Masquerade,
                                        Rich_Tcp_Mss_Clamp ]:
             if self.log is None and self.audit is None and \
                     self.action is None:
@@ -811,7 +809,7 @@ class Rich_Rule(object):
                 raise FirewallError(errors.INVALID_PROTOCOL, self.element.value)
 
         # masquerade
-        elif type(self.element) == Rich_Masquerade:
+        elif type(self.element) == Masquerade:
             if self.action is not None:
                 raise FirewallError(errors.INVALID_RULE, "masquerade and action")
             if self.source is not None and self.source.flags & AddressFlag.MAC:

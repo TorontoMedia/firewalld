@@ -11,7 +11,7 @@ from firewall.functions import portStr, checkIPnMask, checkIP6nMask, \
     checkTcpMssClamp
 from firewall.core.rich import Rich_Rule, Rich_Accept, \
     Service, Port, Protocol, \
-    Rich_Masquerade, Rich_ForwardPort, SourcePort, Rich_IcmpBlock, \
+    Masquerade, Rich_ForwardPort, SourcePort, Rich_IcmpBlock, \
     Rich_IcmpType, Rich_Tcp_Mss_Clamp, AddressFlag
 from firewall.core.fw_transaction import FirewallTransaction
 from firewall import errors
@@ -1449,7 +1449,7 @@ class FirewallPolicy(object):
                 transaction.add_rules(backend, rules)
 
             # MASQUERADE
-            elif type(rule.element) == Rich_Masquerade:
+            elif type(rule.element) == Masquerade:
                 if enable:
                     for ipv in ipvs:
                         if backend.is_ipv_supported(ipv):

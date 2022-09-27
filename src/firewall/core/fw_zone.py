@@ -29,7 +29,7 @@ from firewall.core.rich import (
     Rich_IcmpBlock,
     Rich_IcmpType,
     Rich_Mark,
-    Rich_Masquerade,
+    Masquerade,
     Port,
     Protocol,
     Rich_Rule,
@@ -838,7 +838,7 @@ class FirewallZone(object):
             return [self.policy_name_from_zones(zone, "HOST")]
         elif type(rule.element) in [Rich_ForwardPort]:
             return [self.policy_name_from_zones(zone, "ANY")]
-        elif type(rule.element) in [Rich_Masquerade]:
+        elif type(rule.element) in [Masquerade]:
             return [self.policy_name_from_zones("ANY", zone)]
         elif type(rule.element) in [Rich_Tcp_Mss_Clamp]:
             return [self.policy_name_from_zones(zone, "ANY")]
