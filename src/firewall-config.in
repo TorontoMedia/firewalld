@@ -2072,7 +2072,7 @@ class FirewallConfig(object):
             elif type(obj.element) == rich.Port:
                 elem = _("port") + "\n%s/%s" % (obj.element.port,
                                                 obj.element.protocol)
-            elif type(obj.element) == rich.Rich_Protocol:
+            elif type(obj.element) == rich.Protocol:
                 elem = _("protocol") + "\n" + obj.element.value
             elif type(obj.element) == rich.Rich_Masquerade:
                 elem = _("masquerade")
@@ -3169,7 +3169,7 @@ class FirewallConfig(object):
                                      _("port"))
                 self.richRuleDialogElementChooser.set_text( \
                     "%s/%s" % (old_obj.element.port, old_obj.element.protocol))
-            elif type(old_obj.element) == rich.Rich_Protocol:
+            elif type(old_obj.element) == rich.Protocol:
                 combobox_select_text(self.richRuleDialogElementCombobox,
                                      _("protocol"))
                 self.richRuleDialogElementChooser.set_text( \
@@ -3665,7 +3665,7 @@ class FirewallConfig(object):
                     return None
                 rule.element = rich.Port(port, proto)
             elif combolabel == _("protocol"):
-                rule.element = rich.Rich_Protocol(
+                rule.element = rich.Protocol(
                     self.richRuleDialogElementChooser.get_text())
             elif combolabel == _("icmp-block"):
                 rule.element = rich.Rich_IcmpBlock(

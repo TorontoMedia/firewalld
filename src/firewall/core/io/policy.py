@@ -98,7 +98,10 @@ def common_startElement(obj, name, attrs):
                             str(obj._rule))
                 obj._rule_error = True
                 return True
-            obj._rule.element = rich.Rich_Protocol(attrs["value"])
+            invert = False
+            if "invert" in attrs and parse_boolean(attrs["invert"]):
+                invert = True
+            obj._rule.element = rich.Protocol(attrs["value"], invert)
         else:
             check_protocol(attrs["value"])
             if attrs["value"] not in obj.item.protocols:
@@ -597,9 +600,11 @@ def common_writer(obj, handler):
                 attrs["protocol"] = rule.element.protocol
                 if rule.element.invert:
                     attrs["invert"] = "True"
-            elif type(rule.element) == rich.Rich_Protocol:
+            elif type(rule.element) == rich.Protocol:
                 element = "protocol"
                 attrs["value"] = rule.element.value
+                if rule.element.invert:
+                    attrs["invert"] = "True"
             elif type(rule.element) == rich.Rich_Tcp_Mss_Clamp:
                 element = "tcp-mss-clamp"
                 attrs["value"] = rule.element.value
@@ -791,6 +796,7 @@ class Policy(IO_Object):
         "service": [ "invert" ],
         "port": [ "invert" ],
         "source-port": [ "invert" ],
+        "protocol": [ "invert" ],
     }
 
     def __init__(self):

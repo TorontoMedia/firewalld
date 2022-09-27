@@ -31,7 +31,7 @@ from firewall.core.rich import (
     Rich_Mark,
     Rich_Masquerade,
     Port,
-    Rich_Protocol,
+    Protocol,
     Rich_Rule,
     Service,
     SourcePort,
@@ -833,7 +833,7 @@ class FirewallZone(object):
         zone = self._fw.check_zone(zone)
         if type(rule.action) == Rich_Mark:
             return [self.policy_name_from_zones(zone, "ANY")]
-        elif type(rule.element) in [Service, Port, Rich_Protocol,
+        elif type(rule.element) in [Service, Port, Protocol,
                                     SourcePort, Rich_IcmpBlock, Rich_IcmpType]:
             return [self.policy_name_from_zones(zone, "HOST")]
         elif type(rule.element) in [Rich_ForwardPort]:

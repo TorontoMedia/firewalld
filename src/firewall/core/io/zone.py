@@ -100,6 +100,7 @@ class Zone(IO_Object):
         "service": [ "invert" ],
         "port": [ "invert" ],
         "source-port": [ "invert" ],
+        "protocol": [ "invert" ],
     }
 
     @staticmethod

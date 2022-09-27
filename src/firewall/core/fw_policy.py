@@ -10,7 +10,7 @@ from firewall.functions import portStr, checkIPnMask, checkIP6nMask, \
     portInPortRange, get_nf_conntrack_short_name, coalescePortRange, breakPortRange, \
     checkTcpMssClamp
 from firewall.core.rich import Rich_Rule, Rich_Accept, \
-    Service, Port, Rich_Protocol, \
+    Service, Port, Protocol, \
     Rich_Masquerade, Rich_ForwardPort, SourcePort, Rich_IcmpBlock, \
     Rich_IcmpType, Rich_Tcp_Mss_Clamp, AddressFlag
 from firewall.core.fw_transaction import FirewallTransaction
@@ -1431,12 +1431,12 @@ class FirewallPolicy(object):
                 transaction.add_rules(backend, rules)
 
             # PROTOCOL
-            elif type(rule.element) == Rich_Protocol:
+            elif type(rule.element) == Protocol:
                 protocol = rule.element.value
                 self.check_protocol(protocol)
 
                 rules = backend.build_policy_protocol_rules(
-                            enable, policy, protocol, None, rule)
+                            enable, policy, protocol, None, rule, rule.element.invert)
                 transaction.add_rules(backend, rules)
 
             # TCP/MSS CLAMP
