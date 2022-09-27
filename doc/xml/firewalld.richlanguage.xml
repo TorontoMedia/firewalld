@@ -177,6 +177,7 @@ protocol value="protocol value"
       </para>
       <para>
 	The protocol value can be either a protocol id number or a protocol name. For allowed protocol entries, please have a look at <filename class="directory">/etc/protocols</filename>.
+      It is possible to invert the protocol by adding <option>not</option> before <option>value</option>.
       </para>
     </refsect2>
 
