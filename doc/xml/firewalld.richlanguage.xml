@@ -273,6 +273,7 @@ source-port port="port value" protocol="tcp|udp|sctp|dccp"
       <para>
 	The source-port <replaceable>port value</replaceable> can either be a single port number <replaceable>portid</replaceable> or a port range <replaceable>portid</replaceable>-<replaceable>portid</replaceable>. 
       The protocol can either be <literal>tcp</literal>, <literal>udp</literal>, <literal>sctp</literal> or <literal>dccp</literal>.
+      It is possible to invert the source port by adding <option>not</option> before <option>port</option>.
       </para>
     </refsect2>
 
