@@ -20,7 +20,7 @@
 #
 
 __all__ = [ "Source", "Destination", "Service", "Port",
-            "Protocol", "Masquerade", "Rich_IcmpBlock",
+            "Protocol", "Masquerade", "IcmpBlock",
             "Rich_IcmpType",
             "SourcePort", "Rich_ForwardPort", "Rich_Log", "Rich_NFLog",
             "Rich_Accept", "Rich_Reject", "Rich_Drop", "Rich_Mark",
@@ -56,6 +56,7 @@ class InversionFlag(IntFlag):
     PORT = 1 << 4
     PROTOCOL = 1 << 5
     SOURCE_PORT = 1 << 6
+    ICMP_BLOCK = 1 << 7
 
     @classmethod
     def get(cls, flag: str):
@@ -135,12 +136,13 @@ class Masquerade:
     def __str__(self) -> str:
         return 'masquerade'
 
-class Rich_IcmpBlock(object):
-    def __init__(self, name):
-        self.name = name
+@dataclass
+class IcmpBlock:
+    name: str
+    invert: bool = False
 
-    def __str__(self):
-        return 'icmp-block name="%s"' % (self.name)
+    def __str__(self) -> str:
+        return f'icmp-block{(" NOT" if self.invert else "")} name="{self.name}"'
 
 class Rich_IcmpType(object):
     def __init__(self, name):
@@ -598,10 +600,25 @@ class Rich_Rule(object):
                     index = index -1 # return token to input
             elif in_element == 'icmp-block':
                 if attr_name == 'name':
-                    self.element = Rich_IcmpBlock(attr_value)
-                    in_elements.pop() # icmp-block
+                    attrs['name'] = attr_value
+                elif attr_name == 'invert':
+                    if functions.parse_boolean(attr_value):
+                        inversions |= InversionFlag.ICMP_BLOCK
+                    else:
+                        inversions &= ~InversionFlag.ICMP_BLOCK
+                elif element in ['not', 'NOT']:
+                    if tokens[index + 1].get('attr_name') == 'name':
+                        inversions |= InversionFlag.ICMP_BLOCK
+                    elif tokens[index + 1].get('element') in ['destination', 'service', 'source']:
+                        inversions |= InversionFlag.get(tokens[index + 1]['element'])
                 else:
-                    raise FirewallError(errors.INVALID_RULE, "invalid 'icmp-block' element")
+                    try:
+                        self.element = IcmpBlock(attrs['name'], bool(inversions & InversionFlag.ICMP_BLOCK))
+                    except KeyError as exc:
+                        raise FirewallError(errors.INVALID_RULE, "invalid 'icmp-block' element") from exc
+                    in_elements.pop() # icmp-block
+                    attrs.clear()
+                    index = index -1 # return token to input
             elif in_element == 'icmp-type':
                 if attr_name == 'name':
                     self.element = Rich_IcmpType(attr_value)
@@ -739,7 +756,7 @@ class Rich_Rule(object):
             if self.source is None and self.destination is None and self.priority == 0:
                 raise FirewallError(errors.INVALID_RULE, "no element, no source, no destination")
 
-        if type(self.element) not in [ Rich_IcmpBlock,
+        if type(self.element) not in [ IcmpBlock,
                                        Rich_ForwardPort,
                                        Masquerade,
                                        Rich_Tcp_Mss_Clamp ]:
@@ -816,7 +833,7 @@ class Rich_Rule(object):
                 raise FirewallError(errors.INVALID_RULE, "masquerade and mac source")
 
         # icmp-block
-        elif type(self.element) == Rich_IcmpBlock:
+        elif type(self.element) == IcmpBlock:
             # icmp type availability needs to be checked in Firewall, here is no
             # knowledge about this, therefore only simple check
             if self.element.name is None or len(self.element.name) < 1:

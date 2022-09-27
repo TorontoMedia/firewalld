@@ -2076,7 +2076,7 @@ class FirewallConfig(object):
                 elem = _("protocol") + "\n" + obj.element.value
             elif type(obj.element) == rich.Masquerade:
                 elem = _("masquerade")
-            elif type(obj.element) == rich.Rich_IcmpBlock:
+            elif type(obj.element) == rich.IcmpBlock:
                 elem = _("icmp-block") + "\n%s" % obj.element.name
             elif type(obj.element) == rich.Rich_IcmpType:
                 elem = _("icmp-type") + "\n%s" % obj.element.name
@@ -3177,7 +3177,7 @@ class FirewallConfig(object):
             elif type(old_obj.element) == rich.Masquerade:
                 combobox_select_text(self.richRuleDialogElementCombobox,
                                      _("masquerade"))
-            elif type(old_obj.element) == rich.Rich_IcmpBlock:
+            elif type(old_obj.element) == rich.IcmpBlock:
                 combobox_select_text(self.richRuleDialogElementCombobox,
                                      _("icmp-block"))
                 self.richRuleDialogElementChooser.set_text( \
@@ -3668,7 +3668,7 @@ class FirewallConfig(object):
                 rule.element = rich.Protocol(
                     self.richRuleDialogElementChooser.get_text())
             elif combolabel == _("icmp-block"):
-                rule.element = rich.Rich_IcmpBlock(
+                rule.element = rich.IcmpBlock(
                     self.richRuleDialogElementChooser.get_text())
             elif combolabel == _("icmp-type"):
                 rule.element = rich.Rich_IcmpType(

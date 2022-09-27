@@ -11,7 +11,7 @@ from firewall.functions import portStr, checkIPnMask, checkIP6nMask, \
     checkTcpMssClamp
 from firewall.core.rich import Rich_Rule, Rich_Accept, \
     Service, Port, Protocol, \
-    Masquerade, Rich_ForwardPort, SourcePort, Rich_IcmpBlock, \
+    Masquerade, Rich_ForwardPort, SourcePort, IcmpBlock, \
     Rich_IcmpType, Rich_Tcp_Mss_Clamp, AddressFlag
 from firewall.core.fw_transaction import FirewallTransaction
 from firewall import errors
@@ -1333,7 +1333,7 @@ class FirewallPolicy(object):
         ipvs = []
         if rule.family:
             ipvs = [ rule.family ]
-        elif rule.element and (isinstance(rule.element, Rich_IcmpBlock) or isinstance(rule.element, Rich_IcmpType)):
+        elif rule.element and (isinstance(rule.element, IcmpBlock) or isinstance(rule.element, Rich_IcmpType)):
             ict = self._fw.config.get_icmptype(rule.element.name)
             if ict.destination:
                 ipvs = [ipv for ipv in ["ipv4", "ipv6"] if ipv in ict.destination]
@@ -1486,7 +1486,7 @@ class FirewallPolicy(object):
                 transaction.add_rules(backend, rules)
 
             # ICMP BLOCK and ICMP TYPE
-            elif type(rule.element) == Rich_IcmpBlock or \
+            elif type(rule.element) == IcmpBlock or \
                  type(rule.element) == Rich_IcmpType:
                 ict = self._fw.config.get_icmptype(rule.element.name)
 
@@ -1496,13 +1496,13 @@ class FirewallPolicy(object):
                                         "rich rule family '%s' conflicts with icmp type '%s'" % \
                                         (rule.family, rule.element.name))
 
-                if type(rule.element) == Rich_IcmpBlock and \
+                if type(rule.element) == IcmpBlock and \
                    rule.action and type(rule.action) == Rich_Accept:
                     # icmp block might have reject or drop action, but not accept
                     raise FirewallError(errors.INVALID_RULE,
                                         "IcmpBlock not usable with accept action")
 
-                rules = backend.build_policy_icmp_block_rules(enable, policy, ict, rule)
+                rules = backend.build_policy_icmp_block_rules(enable, policy, ict, rule, rule.element.invert)
                 transaction.add_rules(backend, rules)
 
             elif rule.element is None:

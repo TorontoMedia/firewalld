@@ -26,7 +26,7 @@ from firewall.core.io.policy import Policy
 from firewall.core.logger import log
 from firewall.core.rich import (
     Rich_ForwardPort,
-    Rich_IcmpBlock,
+    IcmpBlock,
     Rich_IcmpType,
     Rich_Mark,
     Masquerade,
@@ -834,7 +834,7 @@ class FirewallZone(object):
         if type(rule.action) == Rich_Mark:
             return [self.policy_name_from_zones(zone, "ANY")]
         elif type(rule.element) in [Service, Port, Protocol,
-                                    SourcePort, Rich_IcmpBlock, Rich_IcmpType]:
+                                    SourcePort, IcmpBlock, Rich_IcmpType]:
             return [self.policy_name_from_zones(zone, "HOST")]
         elif type(rule.element) in [Rich_ForwardPort]:
             return [self.policy_name_from_zones(zone, "ANY")]

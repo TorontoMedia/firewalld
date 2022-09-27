@@ -30,9 +30,10 @@ from firewall.functions import tempFile, readfile, splitArgs, check_mac, portStr
 from firewall import config
 from firewall.errors import FirewallError, INVALID_PASSTHROUGH, INVALID_RULE, UNKNOWN_ERROR, INVALID_ADDR
 from firewall.core.rich import Rich_Accept, Rich_Reject, Rich_Drop, Rich_Mark, Rich_NFLog, \
-                               Masquerade, Rich_ForwardPort, Rich_IcmpBlock, Rich_Tcp_Mss_Clamp, \
+                               Masquerade, Rich_ForwardPort, IcmpBlock, Rich_Tcp_Mss_Clamp, \
                                Rich_Rule, AddressFlag
 from firewall.core.base import DEFAULT_ZONE_TARGET
+from firewall.core.io.icmptype import IcmpType
 import string
 
 POLICY_CHAIN_PREFIX = ""
@@ -984,7 +985,7 @@ class ip4tables(object):
         return []
 
     def _rich_rule_chain_suffix(self, rich_rule):
-        if type(rich_rule.element) in [Masquerade, Rich_ForwardPort, Rich_IcmpBlock, Rich_Tcp_Mss_Clamp]:
+        if type(rich_rule.element) in [Masquerade, Rich_ForwardPort, IcmpBlock, Rich_Tcp_Mss_Clamp]:
             # These are special and don't have an explicit action
             pass
         elif rich_rule.action:
@@ -997,7 +998,7 @@ class ip4tables(object):
             if type(rich_rule.element) in [Masquerade, Rich_ForwardPort, Rich_Tcp_Mss_Clamp] or \
                type(rich_rule.action) in [Rich_Accept, Rich_Mark]:
                 return "allow"
-            elif type(rich_rule.element) in [Rich_IcmpBlock] or \
+            elif type(rich_rule.element) in [IcmpBlock] or \
                  type(rich_rule.action) in [Rich_Reject, Rich_Drop]:
                 return "deny"
         elif rich_rule.priority < 0:
@@ -1373,17 +1374,24 @@ class ip4tables(object):
 
         return rules
 
-    def build_policy_icmp_block_rules(self, enable, policy, ict, rich_rule=None):
+    def build_policy_icmp_block_rules(self, enable: bool, policy: str, ict: IcmpType,
+                                      rich_rule: Optional[Rich_Rule] = None, invert: bool = False):
         table = "filter"
         _policy = self._fw.policy.policy_base_chain_name(policy, table, POLICY_CHAIN_PREFIX)
         add_del = { True: "-A", False: "-D" }[enable]
 
         if self.ipv == "ipv4":
             proto = [ "-p", "icmp" ]
-            match = [ "-m", "icmp", "--icmp-type", ict.name ]
+            match = [ "-m", "icmp" ]
+            if invert:
+                match.append("!")
+            match += [ "--icmp-type", ict.name ]
         else:
             proto = [ "-p", "ipv6-icmp" ]
-            match = [ "-m", "icmp6", "--icmpv6-type", ict.name ]
+            match = [ "-m", "icmp6" ]
+            if invert:
+                match.append("!")
+            match += [ "--icmpv6-type", ict.name ]
 
         rules = []
         if self._fw.policy.query_icmp_block_inversion(policy):

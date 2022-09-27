@@ -101,6 +101,7 @@ class Zone(IO_Object):
         "port": [ "invert" ],
         "source-port": [ "invert" ],
         "protocol": [ "invert" ],
+        "icmp-block": [ "invert" ],
     }
 
     @staticmethod
