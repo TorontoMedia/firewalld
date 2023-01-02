@@ -26,8 +26,7 @@ __all__ = [ "ipset", "check_ipset_name", "remove_default_create_options" ]
 import os.path
 import ipaddress
 
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 from firewall.core.prog import runProg
 from firewall.core.logger import log
 from firewall.functions import tempFile, readfile
@@ -90,7 +89,7 @@ class ipset(object):
     def check_name(self, name):
         """Check ipset name"""
         if len(name) > IPSET_MAXNAMELEN:
-            raise FirewallError(errors.INVALID_NAME,
+            raise FirewallError(ErrorCode.INVALID_NAME,
                                 "ipset name '%s' is not valid" % name)
 
     def set_supported_types(self):
@@ -117,7 +116,7 @@ class ipset(object):
     def check_type(self, type_name):
         """Check ipset type"""
         if len(type_name) > IPSET_MAXNAMELEN or type_name not in IPSET_TYPES:
-            raise FirewallError(errors.INVALID_TYPE,
+            raise FirewallError(ErrorCode.INVALID_TYPE,
                                 "ipset type name '%s' is not valid" % type_name)
 
     def set_create(self, set_name, type_name, options=None):
@@ -317,7 +316,7 @@ def check_entry_overlaps_existing(entry, entries):
 
     for itr in entries:
         if entry_network.overlaps(ipaddress.ip_network(itr, strict=False)):
-            raise FirewallError(errors.INVALID_ENTRY, "Entry '{}' overlaps with existing entry '{}'".format(entry, itr))
+            raise FirewallError(ErrorCode.INVALID_ENTRY, "Entry '{}' overlaps with existing entry '{}'".format(entry, itr))
 
 def check_for_overlapping_entries(entries):
     """ Check if any entry overlaps any entry in the list of entries """
@@ -382,5 +381,5 @@ def check_for_overlapping_entries(entries):
     prev_network = entries.pop(0)
     for current_network in entries:
         if prev_network.overlaps(current_network):
-            raise FirewallError(errors.INVALID_ENTRY, "Entry '{}' overlaps entry '{}'".format(prev_network, current_network))
+            raise FirewallError(ErrorCode.INVALID_ENTRY, "Entry '{}' overlaps entry '{}'".format(prev_network, current_network))
         prev_network = current_network

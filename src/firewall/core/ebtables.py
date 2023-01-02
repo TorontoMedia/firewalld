@@ -27,7 +27,7 @@ from firewall.core.logger import log
 from firewall.functions import tempFile, readfile, splitArgs
 from firewall.config import COMMANDS
 from firewall.core import ipXtables # some common stuff lives there
-from firewall.errors import FirewallError, INVALID_IPV
+from firewall.errors import ErrorCode, FirewallError
 import string
 
 BUILT_IN_CHAINS = {
@@ -102,7 +102,7 @@ class ebtables(object):
     def _rule_validate(self, rule):
         for str in ["%%REJECT%%", "%%ICMP%%", "%%LOGTYPE%%"]:
             if str in rule:
-                raise FirewallError(INVALID_IPV,
+                raise FirewallError(ErrorCode.INVALID_IPV,
                         "'%s' invalid for ebtables" % str)
 
     def is_chain_builtin(self, ipv, table, chain):

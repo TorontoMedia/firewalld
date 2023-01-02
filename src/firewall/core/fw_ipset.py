@@ -28,8 +28,7 @@ from firewall.core.ipset import remove_default_create_options as rm_def_cr_opts,
                                 normalize_ipset_entry, check_entry_overlaps_existing, \
                                 check_for_overlapping_entries
 from firewall.core.io.ipset import IPSet
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 class FirewallIPSet(object):
     def __init__(self, fw):
@@ -46,7 +45,7 @@ class FirewallIPSet(object):
 
     def check_ipset(self, name):
         if name not in self.get_ipsets():
-            raise FirewallError(errors.INVALID_IPSET, name)
+            raise FirewallError(ErrorCode.INVALID_IPSET, name)
 
     def query_ipset(self, name):
         return name in self.get_ipsets()
@@ -82,7 +81,7 @@ class FirewallIPSet(object):
 
     def add_ipset(self, obj):
         if obj.type not in self._fw.ipset_supported_types:
-            raise FirewallError(errors.INVALID_TYPE,
+            raise FirewallError(ErrorCode.INVALID_TYPE,
                                 "'%s' is not supported by ipset." % obj.type)
         self._ipsets[obj.name] = obj
 
@@ -93,7 +92,7 @@ class FirewallIPSet(object):
                 for backend in self.backends():
                     backend.set_destroy(name)
             except Exception as msg:
-                raise FirewallError(errors.COMMAND_FAILED, msg)
+                raise FirewallError(ErrorCode.COMMAND_FAILED, msg)
         else:
             log.debug1("Keeping ipset '%s' because of timeout option", name)
         del self._ipsets[name]
@@ -113,13 +112,13 @@ class FirewallIPSet(object):
                     try:
                         backend.set_destroy(name)
                     except Exception as msg:
-                        raise FirewallError(errors.COMMAND_FAILED, msg)
+                        raise FirewallError(ErrorCode.COMMAND_FAILED, msg)
 
             if self._fw._individual_calls:
                 try:
                     backend.set_create(obj.name, obj.type, obj.options)
                 except Exception as msg:
-                    raise FirewallError(errors.COMMAND_FAILED, msg)
+                    raise FirewallError(ErrorCode.COMMAND_FAILED, msg)
                 else:
                     obj.applied = True
                     if "timeout" in obj.options and \
@@ -130,20 +129,20 @@ class FirewallIPSet(object):
                 try:
                     backend.set_flush(obj.name)
                 except Exception as msg:
-                    raise FirewallError(errors.COMMAND_FAILED, msg)
+                    raise FirewallError(ErrorCode.COMMAND_FAILED, msg)
 
                 for entry in obj.entries:
                     try:
                         backend.set_add(obj.name, entry)
                     except Exception as msg:
-                        raise FirewallError(errors.COMMAND_FAILED, msg)
+                        raise FirewallError(ErrorCode.COMMAND_FAILED, msg)
             else:
                 try:
                     backend.set_restore(obj.name, obj.type,
                                                    obj.entries, obj.options,
                                                    None)
                 except Exception as msg:
-                    raise FirewallError(errors.COMMAND_FAILED, msg)
+                    raise FirewallError(ErrorCode.COMMAND_FAILED, msg)
                 else:
                     obj.applied = True
 
@@ -165,7 +164,7 @@ class FirewallIPSet(object):
                     self.check_applied(ipset)
                     backend.set_destroy(ipset)
                 except FirewallError as msg:
-                    if msg.code != errors.NOT_APPLIED:
+                    if msg.code != ErrorCode.NOT_APPLIED:
                         raise msg
 
     # TYPE
@@ -184,7 +183,7 @@ class FirewallIPSet(object):
     def check_applied_obj(self, obj):
         if not obj.applied:
             raise FirewallError(
-                errors.NOT_APPLIED, obj.name)
+                ErrorCode.NOT_APPLIED, obj.name)
 
     # OPTIONS
 
@@ -203,7 +202,7 @@ class FirewallIPSet(object):
 
         IPSet.check_entry(entry, obj.options, obj.type)
         if entry in obj.entries:
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "'%s' already is in '%s'" % (entry, name))
         check_entry_overlaps_existing(entry, obj.entries)
 
@@ -211,7 +210,7 @@ class FirewallIPSet(object):
             for backend in self.backends():
                 backend.set_add(obj.name, entry)
         except Exception as msg:
-            raise FirewallError(errors.COMMAND_FAILED, msg)
+            raise FirewallError(ErrorCode.COMMAND_FAILED, msg)
         else:
             if "timeout" not in obj.options or obj.options["timeout"] == "0":
                 # no entries visible for ipsets with timeout
@@ -223,13 +222,13 @@ class FirewallIPSet(object):
 
         # no entry check for removal
         if entry not in obj.entries:
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "'%s' not in '%s'" % (entry, name))
         try:
             for backend in self.backends():
                 backend.set_delete(obj.name, entry)
         except Exception as msg:
-            raise FirewallError(errors.COMMAND_FAILED, msg)
+            raise FirewallError(ErrorCode.COMMAND_FAILED, msg)
         else:
             if "timeout" not in obj.options or obj.options["timeout"] == "0":
                 # no entries visible for ipsets with timeout
@@ -240,7 +239,7 @@ class FirewallIPSet(object):
         entry = normalize_ipset_entry(entry)
         if "timeout" in obj.options and obj.options["timeout"] != "0":
             # no entries visible for ipsets with timeout
-            raise FirewallError(errors.IPSET_WITH_TIMEOUT, name)
+            raise FirewallError(ErrorCode.IPSET_WITH_TIMEOUT, name)
 
         return entry in obj.entries
 
@@ -263,7 +262,7 @@ class FirewallIPSet(object):
             for backend in self.backends():
                 backend.set_flush(obj.name)
         except Exception as msg:
-            raise FirewallError(errors.COMMAND_FAILED, msg)
+            raise FirewallError(ErrorCode.COMMAND_FAILED, msg)
         else:
             obj.applied = True
 
@@ -276,7 +275,7 @@ class FirewallIPSet(object):
                     backend.set_restore(obj.name, obj.type, obj.entries,
                                                    obj.options, None)
         except Exception as msg:
-            raise FirewallError(errors.COMMAND_FAILED, msg)
+            raise FirewallError(ErrorCode.COMMAND_FAILED, msg)
         else:
             obj.applied = True
 

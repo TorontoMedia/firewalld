@@ -30,8 +30,7 @@ from firewall.server.dbus import DbusServiceObject
 from firewall.server.decorators import handle_exceptions, \
     dbus_handle_exceptions, dbus_service_method, \
     dbus_polkit_require_auth
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 ############################################################################
 #
@@ -360,7 +359,7 @@ class FirewallDConfigService(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if (port,protocol) in settings[3]:
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "%s:%s" % (port, protocol))
         settings[3].append((port,protocol))
         self.update(settings)
@@ -376,7 +375,7 @@ class FirewallDConfigService(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if (port,protocol) not in settings[3]:
-            raise FirewallError(errors.NOT_ENABLED, "%s:%s" % (port, protocol))
+            raise FirewallError(ErrorCode.NOT_ENABLED, "%s:%s" % (port, protocol))
         settings[3].remove((port,protocol))
         self.update(settings)
 
@@ -420,7 +419,7 @@ class FirewallDConfigService(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if protocol in settings[6]:
-            raise FirewallError(errors.ALREADY_ENABLED, protocol)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, protocol)
         settings[6].append(protocol)
         self.update(settings)
 
@@ -433,7 +432,7 @@ class FirewallDConfigService(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if protocol not in settings[6]:
-            raise FirewallError(errors.NOT_ENABLED, protocol)
+            raise FirewallError(ErrorCode.NOT_ENABLED, protocol)
         settings[6].remove(protocol)
         self.update(settings)
 
@@ -484,7 +483,7 @@ class FirewallDConfigService(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if (port,protocol) in settings[7]:
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "%s:%s" % (port, protocol))
         settings[7].append((port,protocol))
         self.update(settings)
@@ -500,7 +499,7 @@ class FirewallDConfigService(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if (port,protocol) not in settings[7]:
-            raise FirewallError(errors.NOT_ENABLED, "%s:%s" % (port, protocol))
+            raise FirewallError(ErrorCode.NOT_ENABLED, "%s:%s" % (port, protocol))
         settings[7].remove((port,protocol))
         self.update(settings)
 
@@ -556,7 +555,7 @@ class FirewallDConfigService(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if module in settings[4]:
-            raise FirewallError(errors.ALREADY_ENABLED, module)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, module)
         settings[4].append(module)
         self.update(settings)
 
@@ -573,7 +572,7 @@ class FirewallDConfigService(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if module not in settings[4]:
-            raise FirewallError(errors.NOT_ENABLED, module)
+            raise FirewallError(ErrorCode.NOT_ENABLED, module)
         settings[4].remove(module)
         self.update(settings)
 
@@ -621,7 +620,7 @@ class FirewallDConfigService(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if family not in settings[5]:
-            raise FirewallError(errors.NOT_ENABLED, family)
+            raise FirewallError(ErrorCode.NOT_ENABLED, family)
         return settings[5][family]
 
     @dbus_service_method(config.dbus.DBUS_INTERFACE_CONFIG_SERVICE,
@@ -635,7 +634,7 @@ class FirewallDConfigService(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if family in settings[5] and settings[5][family] == address:
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "'%s': '%s'" % (family, address))
         settings[5][family] = address
         self.update(settings)
@@ -650,7 +649,7 @@ class FirewallDConfigService(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if family not in settings[5]:
-            raise FirewallError(errors.NOT_ENABLED, family)
+            raise FirewallError(ErrorCode.NOT_ENABLED, family)
         del settings[5][family]
         self.update(settings)
 

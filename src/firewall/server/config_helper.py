@@ -31,8 +31,7 @@ from firewall.server.dbus import DbusServiceObject
 from firewall.server.decorators import handle_exceptions, \
     dbus_handle_exceptions, dbus_service_method, \
     dbus_polkit_require_auth
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 ############################################################################
 #
@@ -323,7 +322,7 @@ class FirewallDConfigHelper(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if settings[3] == ipv:
-            raise FirewallError(errors.ALREADY_ENABLED, "'%s'" % ipv)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, "'%s'" % ipv)
         settings[3] = ipv
         self.update(settings)
 
@@ -356,7 +355,7 @@ class FirewallDConfigHelper(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if settings[4] == module:
-            raise FirewallError(errors.ALREADY_ENABLED, "'%s'" % module)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, "'%s'" % module)
         settings[4] = module
         self.update(settings)
 
@@ -408,7 +407,7 @@ class FirewallDConfigHelper(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if (port,protocol) in settings[5]:
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "%s:%s" % (port, protocol))
         settings[5].append((port,protocol))
         self.update(settings)
@@ -424,7 +423,7 @@ class FirewallDConfigHelper(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if (port,protocol) not in settings[5]:
-            raise FirewallError(errors.NOT_ENABLED, "%s:%s" % (port, protocol))
+            raise FirewallError(ErrorCode.NOT_ENABLED, "%s:%s" % (port, protocol))
         settings[5].remove((port,protocol))
         self.update(settings)
 

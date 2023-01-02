@@ -21,8 +21,7 @@
 
 __all__ = [ "FirewallService" ]
 
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 class FirewallService(object):
     def __init__(self, fw):
@@ -42,7 +41,7 @@ class FirewallService(object):
 
     def check_service(self, service):
         if service not in self._services:
-            raise FirewallError(errors.INVALID_SERVICE, service)
+            raise FirewallError(ErrorCode.INVALID_SERVICE, service)
 
     def get_service(self, service):
         self.check_service(service)

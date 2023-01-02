@@ -23,8 +23,7 @@
 
 __all__ = [ "FirewallHelper" ]
 
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 class FirewallHelper(object):
     def __init__(self, fw):
@@ -41,7 +40,7 @@ class FirewallHelper(object):
 
     def check_helper(self, name):
         if name not in self.get_helpers():
-            raise FirewallError(errors.INVALID_HELPER, name)
+            raise FirewallError(ErrorCode.INVALID_HELPER, name)
 
     def query_helper(self, name):
         return name in self.get_helpers()
@@ -61,5 +60,5 @@ class FirewallHelper(object):
 
     def remove_helper(self, name):
         if name not in self._helpers:
-            raise FirewallError(errors.INVALID_HELPER, name)
+            raise FirewallError(ErrorCode.INVALID_HELPER, name)
         del self._helpers[name]

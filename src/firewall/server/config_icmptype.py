@@ -31,8 +31,7 @@ from firewall.server.dbus import DbusServiceObject
 from firewall.server.decorators import handle_exceptions, \
     dbus_handle_exceptions, dbus_service_method, \
     dbus_polkit_require_auth
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 ############################################################################
 #
@@ -334,7 +333,7 @@ class FirewallDConfigIcmpType(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if destination in settings[3]:
-            raise FirewallError(errors.ALREADY_ENABLED, destination)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, destination)
         settings[3].append(destination)
         self.update(settings)
 
@@ -349,7 +348,7 @@ class FirewallDConfigIcmpType(DbusServiceObject):
         settings = list(self.getSettings())
         if settings[3]:
             if destination not in settings[3]:
-                raise FirewallError(errors.NOT_ENABLED, destination)
+                raise FirewallError(ErrorCode.NOT_ENABLED, destination)
             else:
                 settings[3].remove(destination)
         else:  # empty means all

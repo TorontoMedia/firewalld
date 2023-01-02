@@ -34,8 +34,7 @@ from firewall.server.dbus import DbusServiceObject
 from firewall.server.decorators import handle_exceptions, \
     dbus_handle_exceptions, dbus_service_method, \
     dbus_polkit_require_auth
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 ############################################################################
 #
@@ -324,7 +323,7 @@ class FirewallDConfigIPSet(DbusServiceObject):
         log.debug1("%s.setType('%s')", self._log_prefix, ipset_type)
         self.parent.accessCheck(sender)
         if ipset_type not in IPSET_TYPES:
-            raise FirewallError(errors.INVALID_TYPE, ipset_type)
+            raise FirewallError(ErrorCode.INVALID_TYPE, ipset_type)
         settings = list(self.getSettings())
         settings[3] = ipset_type
         self.update(settings)
@@ -360,7 +359,7 @@ class FirewallDConfigIPSet(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if key in settings[4] and settings[4][key] == value:
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "'%s': '%s'" % (key, value))
         settings[4][key] = value
         self.update(settings)
@@ -374,7 +373,7 @@ class FirewallDConfigIPSet(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if key not in settings[4]:
-            raise FirewallError(errors.NOT_ENABLED, key)
+            raise FirewallError(ErrorCode.NOT_ENABLED, key)
         del settings[4][key]
         self.update(settings)
 
@@ -410,7 +409,7 @@ class FirewallDConfigIPSet(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if "timeout" in settings[4] and settings[4]["timeout"] != "0":
-            raise FirewallError(errors.IPSET_WITH_TIMEOUT)
+            raise FirewallError(ErrorCode.IPSET_WITH_TIMEOUT)
         settings[5] = entries
         self.update(settings)
 
@@ -424,9 +423,9 @@ class FirewallDConfigIPSet(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if "timeout" in settings[4] and settings[4]["timeout"] != "0":
-            raise FirewallError(errors.IPSET_WITH_TIMEOUT)
+            raise FirewallError(ErrorCode.IPSET_WITH_TIMEOUT)
         if entry in settings[5]:
-            raise FirewallError(errors.ALREADY_ENABLED, entry)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, entry)
         check_entry_overlaps_existing(entry, settings[5])
         settings[5].append(entry)
         self.update(settings)
@@ -441,9 +440,9 @@ class FirewallDConfigIPSet(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if "timeout" in settings[4] and settings[4]["timeout"] != "0":
-            raise FirewallError(errors.IPSET_WITH_TIMEOUT)
+            raise FirewallError(ErrorCode.IPSET_WITH_TIMEOUT)
         if entry not in settings[5]:
-            raise FirewallError(errors.NOT_ENABLED, entry)
+            raise FirewallError(ErrorCode.NOT_ENABLED, entry)
         settings[5].remove(entry)
         self.update(settings)
 
@@ -456,5 +455,5 @@ class FirewallDConfigIPSet(DbusServiceObject):
         log.debug1("%s.queryEntry('%s')", self._log_prefix, entry)
         settings = list(self.getSettings())
         if "timeout" in settings[4] and settings[4]["timeout"] != "0":
-            raise FirewallError(errors.IPSET_WITH_TIMEOUT)
+            raise FirewallError(ErrorCode.IPSET_WITH_TIMEOUT)
         return entry in settings[5]

@@ -38,8 +38,7 @@ from firewall.core.ipset import IPSET_TYPES, IPSET_CREATE_OPTIONS
 from firewall.core.icmp import check_icmp_name, check_icmp_type, \
     check_icmpv6_name, check_icmpv6_type
 from firewall.core.logger import log
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 class IPSet(IO_Object):
     IMPORT_EXPORT_STRUCTURE = (
@@ -91,14 +90,14 @@ class IPSet(IO_Object):
                 family = "ipv6"
 
         if not ipset_type.startswith("hash:"):
-            raise FirewallError(errors.INVALID_IPSET,
+            raise FirewallError(ErrorCode.INVALID_IPSET,
                                 "ipset type '%s' not usable" % ipset_type)
         flags = ipset_type[5:].split(",")
         items = entry.split(",")
 
         if len(flags) != len(items) or len(flags) < 1:
             raise FirewallError(
-                errors.INVALID_ENTRY,
+                ErrorCode.INVALID_ENTRY,
                 "entry '%s' does not match ipset type '%s'" % \
                 (entry, ipset_type))
 
@@ -110,20 +109,20 @@ class IPSet(IO_Object):
                     # IP ranges only with plain IPs, no masks
                     if i > 1:
                         raise FirewallError(
-                            errors.INVALID_ENTRY,
+                            ErrorCode.INVALID_ENTRY,
                             "invalid address '%s' in '%s'[%d]" % \
                             (item, entry, i))
                     splits = item.split("-")
                     if len(splits) != 2:
                         raise FirewallError(
-                            errors.INVALID_ENTRY,
+                            ErrorCode.INVALID_ENTRY,
                             "invalid address range '%s' in '%s' for %s (%s)" % \
                             (item, entry, ipset_type, family))
                     for _split in splits:
                         if (family == "ipv4" and not checkIP(_split)) or \
                            (family == "ipv6" and not checkIP6(_split)):
                             raise FirewallError(
-                                errors.INVALID_ENTRY,
+                                ErrorCode.INVALID_ENTRY,
                                 "invalid address '%s' in '%s' for %s (%s)" % \
                                 (_split, entry, ipset_type, family))
                 else:
@@ -132,7 +131,7 @@ class IPSet(IO_Object):
                     if family == "ipv4":
                         if item == "0.0.0.0":
                             raise FirewallError(
-                                errors.INVALID_ENTRY,
+                                ErrorCode.INVALID_ENTRY,
                                 "invalid address '%s' in '%s' for %s (%s)" % \
                                 (item, entry, ipset_type, family))
                         if i == 0:
@@ -143,7 +142,7 @@ class IPSet(IO_Object):
                         ip_check = checkIP6
                     if not ip_check(item):
                         raise FirewallError(
-                            errors.INVALID_ENTRY,
+                            ErrorCode.INVALID_ENTRY,
                             "invalid address '%s' in '%s' for %s (%s)" % \
                             (item, entry, ipset_type, family))
             elif flag == "net":
@@ -152,21 +151,21 @@ class IPSet(IO_Object):
                     splits = item.split("-")
                     if len(splits) != 2:
                         raise FirewallError(
-                            errors.INVALID_ENTRY,
+                            ErrorCode.INVALID_ENTRY,
                             "invalid address range '%s' in '%s' for %s (%s)" % \
                             (item, entry, ipset_type, family))
                     # First part can only be a plain IP
                     if (family == "ipv4" and not checkIP(splits[0])) or \
                        (family == "ipv6" and not checkIP6(splits[0])):
                         raise FirewallError(
-                            errors.INVALID_ENTRY,
+                            ErrorCode.INVALID_ENTRY,
                             "invalid address '%s' in '%s' for %s (%s)" % \
                             (splits[0], entry, ipset_type, family))
                     # Second part can also have a mask
                     if (family == "ipv4" and not checkIPnMask(splits[1])) or \
                        (family == "ipv6" and not checkIP6nMask(splits[1])):
                         raise FirewallError(
-                            errors.INVALID_ENTRY,
+                            ErrorCode.INVALID_ENTRY,
                             "invalid address '%s' in '%s' for %s (%s)" % \
                             (splits[1], entry, ipset_type, family))
                 else:
@@ -175,66 +174,66 @@ class IPSet(IO_Object):
                         if not (family == "ipv6" and i == 0 and
                                 ipset_type == "hash:net,iface"):
                             raise FirewallError(
-                                errors.INVALID_ENTRY,
+                                ErrorCode.INVALID_ENTRY,
                                 "invalid address '%s' in '%s' for %s (%s)" % \
                                 (item, entry, ipset_type, family))
                     if (family == "ipv4" and not checkIPnMask(item)) or \
                        (family == "ipv6" and not checkIP6nMask(item)):
                         raise FirewallError(
-                            errors.INVALID_ENTRY,
+                            ErrorCode.INVALID_ENTRY,
                             "invalid address '%s' in '%s' for %s (%s)" % \
                             (item, entry, ipset_type, family))
             elif flag == "mac":
                 # ipset does not allow to add 00:00:00:00:00:00
                 if not check_mac(item) or item == "00:00:00:00:00:00":
                     raise FirewallError(
-                        errors.INVALID_ENTRY,
+                        ErrorCode.INVALID_ENTRY,
                         "invalid mac address '%s' in '%s'" % (item, entry))
             elif flag == "port":
                 if ":" in item:
                     splits = item.split(":")
                     if len(splits) != 2:
                         raise FirewallError(
-                            errors.INVALID_ENTRY,
+                            ErrorCode.INVALID_ENTRY,
                             "invalid port '%s'" % (item))
                     if splits[0] == "icmp":
                         if family != "ipv4":
                             raise FirewallError(
-                                errors.INVALID_ENTRY,
+                                ErrorCode.INVALID_ENTRY,
                                 "invalid protocol for family '%s' in '%s'" % \
                                 (family, entry))
                         if not check_icmp_name(splits[1]) and not \
                            check_icmp_type(splits[1]):
                             raise FirewallError(
-                                errors.INVALID_ENTRY,
+                                ErrorCode.INVALID_ENTRY,
                                 "invalid icmp type '%s' in '%s'" % \
                                 (splits[1], entry))
                     elif splits[0] in [ "icmpv6", "ipv6-icmp" ]:
                         if family != "ipv6":
                             raise FirewallError(
-                                errors.INVALID_ENTRY,
+                                ErrorCode.INVALID_ENTRY,
                                 "invalid protocol for family '%s' in '%s'" % \
                                 (family, entry))
                         if not check_icmpv6_name(splits[1]) and not \
                            check_icmpv6_type(splits[1]):
                             raise FirewallError(
-                                errors.INVALID_ENTRY,
+                                ErrorCode.INVALID_ENTRY,
                                 "invalid icmpv6 type '%s' in '%s'" % \
                                 (splits[1], entry))
                     elif splits[0] not in [ "tcp", "sctp", "udp", "udplite" ] \
                        and not checkProtocol(splits[0]):
                         raise FirewallError(
-                            errors.INVALID_ENTRY,
+                            ErrorCode.INVALID_ENTRY,
                             "invalid protocol '%s' in '%s'" % (splits[0],
                                                                entry))
                     elif not check_port(splits[1]):
                         raise FirewallError(
-                            errors.INVALID_ENTRY,
+                            ErrorCode.INVALID_ENTRY,
                             "invalid port '%s'in '%s'" % (splits[1], entry))
                 else:
                     if not check_port(item):
                         raise FirewallError(
-                            errors.INVALID_ENTRY,
+                            ErrorCode.INVALID_ENTRY,
                             "invalid port '%s' in '%s'" % (item, entry))
             elif flag == "mark":
                 if item.startswith("0x"):
@@ -242,59 +241,59 @@ class IPSet(IO_Object):
                         int_val = int(item, 16)
                     except ValueError:
                         raise FirewallError(
-                            errors.INVALID_ENTRY,
+                            ErrorCode.INVALID_ENTRY,
                             "invalid mark '%s' in '%s'" % (item, entry))
                 else:
                     try:
                         int_val = int(item)
                     except ValueError:
                         raise FirewallError(
-                            errors.INVALID_ENTRY,
+                            ErrorCode.INVALID_ENTRY,
                             "invalid mark '%s' in '%s'" % (item, entry))
                 if int_val < 0 or int_val > 4294967295:
                     raise FirewallError(
-                        errors.INVALID_ENTRY,
+                        ErrorCode.INVALID_ENTRY,
                         "invalid mark '%s' in '%s'" % (item, entry))
             elif flag == "iface":
                 if not checkInterface(item) or len(item) > 15:
                     raise FirewallError(
-                        errors.INVALID_ENTRY,
+                        ErrorCode.INVALID_ENTRY,
                         "invalid interface '%s' in '%s'" % (item, entry))
             else:
-                raise FirewallError(errors.INVALID_IPSET,
+                raise FirewallError(ErrorCode.INVALID_IPSET,
                                     "ipset type '%s' not usable" % ipset_type)
 
     def _check_config(self, config, item, all_config, all_io_objects):
         if item == "type":
             if config not in IPSET_TYPES:
-                raise FirewallError(errors.INVALID_TYPE,
+                raise FirewallError(ErrorCode.INVALID_TYPE,
                                     "'%s' is not valid ipset type" % config)
         if item == "options":
             for key in config.keys():
                 if key not in IPSET_CREATE_OPTIONS:
-                    raise FirewallError(errors.INVALID_IPSET,
+                    raise FirewallError(ErrorCode.INVALID_IPSET,
                                         "ipset invalid option '%s'" % key)
                 if key in [ "timeout", "hashsize", "maxelem" ]:
                     try:
                         int_value = int(config[key])
                     except ValueError:
                         raise FirewallError(
-                            errors.INVALID_VALUE,
+                            ErrorCode.INVALID_VALUE,
                             "Option '%s': Value '%s' is not an integer" % \
                             (key, config[key]))
                     if int_value < 0:
                         raise FirewallError(
-                            errors.INVALID_VALUE,
+                            ErrorCode.INVALID_VALUE,
                             "Option '%s': Value '%s' is negative" % \
                             (key, config[key]))
                 elif key == "family" and \
                      config[key] not in [ "inet", "inet6" ]:
-                    raise FirewallError(errors.INVALID_FAMILY, config[key])
+                    raise FirewallError(ErrorCode.INVALID_FAMILY, config[key])
 
     def import_config(self, config, all_io_objects):
         if "timeout" in config[4] and config[4]["timeout"] != "0":
             if len(config[5]) != 0:
-                raise FirewallError(errors.IPSET_WITH_TIMEOUT)
+                raise FirewallError(ErrorCode.IPSET_WITH_TIMEOUT)
         for entry in config[5]:
             IPSet.check_entry(entry, config[4], config[3])
         super(IPSet, self).import_config(config, all_io_objects)
@@ -308,7 +307,7 @@ class ipset_ContentHandler(IO_Object_ContentHandler):
         if name == "ipset":
             if "type" in attrs:
                 if attrs["type"] not in IPSET_TYPES:
-                    raise FirewallError(errors.INVALID_TYPE, "%s" % attrs["type"])
+                    raise FirewallError(ErrorCode.INVALID_TYPE, "%s" % attrs["type"])
                 self.item.type = attrs["type"]
             if "version" in attrs:
                 self.item.version = attrs["version"]
@@ -324,33 +323,33 @@ class ipset_ContentHandler(IO_Object_ContentHandler):
             if attrs["name"] not in \
                [ "family", "timeout", "hashsize", "maxelem" ]:
                 raise FirewallError(
-                    errors.INVALID_OPTION,
+                    ErrorCode.INVALID_OPTION,
                     "Unknown option '%s'" % attrs["name"])
             if self.item.type == "hash:mac" and attrs["name"] in [ "family" ]:
                 raise FirewallError(
-                    errors.INVALID_OPTION,
+                    ErrorCode.INVALID_OPTION,
                     "Unsupported option '%s' for type '%s'" % \
                     (attrs["name"], self.item.type))
             if attrs["name"] in [ "family", "timeout", "hashsize", "maxelem" ] \
                and not value:
                 raise FirewallError(
-                    errors.INVALID_OPTION,
+                    ErrorCode.INVALID_OPTION,
                     "Missing mandatory value of option '%s'" % attrs["name"])
             if attrs["name"] in [ "timeout", "hashsize", "maxelem" ]:
                 try:
                     int_value = int(value)
                 except ValueError:
                     raise FirewallError(
-                        errors.INVALID_VALUE,
+                        ErrorCode.INVALID_VALUE,
                         "Option '%s': Value '%s' is not an integer" % \
                         (attrs["name"], value))
                 if int_value < 0:
                     raise FirewallError(
-                        errors.INVALID_VALUE,
+                        ErrorCode.INVALID_VALUE,
                         "Option '%s': Value '%s' is negative" % \
                         (attrs["name"], value))
             if attrs["name"] == "family" and value not in [ "inet", "inet6" ]:
-                raise FirewallError(errors.INVALID_FAMILY, value)
+                raise FirewallError(ErrorCode.INVALID_FAMILY, value)
             if attrs["name"] not in self.item.options:
                 self.item.options[attrs["name"]] = value
             else:
@@ -365,7 +364,7 @@ class ipset_ContentHandler(IO_Object_ContentHandler):
 def ipset_reader(filename, path):
     ipset = IPSet()
     if not filename.endswith(".xml"):
-        raise FirewallError(errors.INVALID_NAME,
+        raise FirewallError(ErrorCode.INVALID_NAME,
                             "'%s' is missing .xml suffix" % filename)
     ipset.name = filename[:-4]
     ipset.check_name(ipset.name)
@@ -383,7 +382,7 @@ def ipset_reader(filename, path):
         try:
             parser.parse(source)
         except sax.SAXParseException as msg:
-            raise FirewallError(errors.INVALID_IPSET,
+            raise FirewallError(ErrorCode.INVALID_IPSET,
                                 "not a valid ipset file: %s" % \
                                 msg.getException())
     del handler

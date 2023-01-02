@@ -32,8 +32,7 @@ from firewall.client import FirewallClient, FirewallClientIPSetSettings, \
     FirewallClientZoneSettings, FirewallClientServiceSettings, \
     FirewallClientIcmpTypeSettings, FirewallClientHelperSettings, \
     FirewallClientPolicySettings
-from firewall.errors import FirewallError
-from firewall import errors
+from firewall.errors import ErrorCode, FirewallError
 from firewall.functions import joinArgs, splitArgs, getPortRange
 from firewall.core.fw_nm import nm_is_imported, \
     nm_get_connection_of_interface, nm_get_zone_of_connection, \
@@ -1165,9 +1164,9 @@ if not (options_standalone or options_ipset or \
 
 if not fw.connected:
     if a.state:
-        cmd.print_and_exit ("not running", errors.NOT_RUNNING)
+        cmd.print_and_exit ("not running", ErrorCode.NOT_RUNNING.value)
     else:
-        cmd.print_and_exit ("FirewallD is not running", errors.NOT_RUNNING)
+        cmd.print_and_exit ("FirewallD is not running", ErrorCode.NOT_RUNNING.value)
 cmd.set_fw(fw)
 
 if options_zone_ops and not zone and not a.policy and not \
@@ -2465,9 +2464,9 @@ elif a.state:
     if state == "RUNNING":
         cmd.print_and_exit ("running")
     elif state == "FAILED":
-        cmd.print_and_exit("failed", errors.RUNNING_BUT_FAILED)
+        cmd.print_and_exit("failed", ErrorCode.RUNNING_BUT_FAILED.value)
     else:
-        cmd.print_and_exit ("not running", errors.NOT_RUNNING)
+        cmd.print_and_exit ("not running", ErrorCode.NOT_RUNNING.value)
 elif a.get_log_denied:
     cmd.print_and_exit(fw.getLogDenied())
 elif a.set_log_denied:

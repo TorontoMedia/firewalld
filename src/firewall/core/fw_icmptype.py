@@ -22,8 +22,7 @@
 __all__ = [ "FirewallIcmpType" ]
 
 from firewall.core.logger import log
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 class FirewallIcmpType(object):
     def __init__(self, fw):
@@ -43,7 +42,7 @@ class FirewallIcmpType(object):
 
     def check_icmptype(self, icmptype):
         if icmptype not in self._icmptypes:
-            raise FirewallError(errors.INVALID_ICMPTYPE, icmptype)
+            raise FirewallError(ErrorCode.INVALID_ICMPTYPE, icmptype)
 
     def get_icmptype(self, icmptype):
         self.check_icmptype(icmptype)

@@ -26,8 +26,7 @@ __all__ = [ "FirewallTransaction" ]
 import traceback
 
 from firewall.core.logger import log
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 class FirewallTransaction(object):
     def __init__(self, fw):
@@ -158,7 +157,7 @@ class FirewallTransaction(object):
                     log.error("Calling fail func %s(%s) failed: %s" % \
                               (func, args, msg))
 
-            raise FirewallError(errors.COMMAND_FAILED, errorMsg)
+            raise FirewallError(ErrorCode.COMMAND_FAILED, errorMsg)
 
         # post
         self.post()

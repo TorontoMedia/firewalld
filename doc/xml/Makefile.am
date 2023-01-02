@@ -66,7 +66,8 @@ clean:
 errorcodes.xml: ../../src/firewall/errors.py
 	@echo Creating $@
 	@grep '=\s*[0-9]\+$$' ../../src/firewall/errors.py | \
-		sed -e 's/^/\<row\>\<entry\>/g' \
+		sed -e 's/^[[:space:]]*//' \
+			-e 's/^/\<row\>\<entry\>/g' \
 			-e 's/ *= */\<\/entry\>\<entry\>/g' \
 			-e 's/$$/\<\/entry\>\<\/row\>/g' > $@
 

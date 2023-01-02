@@ -39,8 +39,7 @@ from firewall.core.rich import (
 )
 from firewall.core.fw_nm import nm_get_bus_name
 from firewall.functions import checkIPnMask, checkIP6nMask, check_mac
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 class FirewallZone(object):
     ZONE_POLICY_PRIORITY = 0
@@ -215,7 +214,7 @@ class FirewallZone(object):
             fromZone = "ANY"
             toZone = zone
         else:
-            raise FirewallError(errors.INVALID_CHAIN, "chain '%s' can't be mapped to a policy" % (chain))
+            raise FirewallError(ErrorCode.INVALID_CHAIN, "chain '%s' can't be mapped to a policy" % (chain))
 
         return (self.policy_name_from_zones(fromZone, toZone), _chain)
 
@@ -418,12 +417,12 @@ class FirewallZone(object):
         interface_id = self.__interface_id(interface)
 
         if interface_id in _obj.interfaces:
-            raise FirewallError(errors.ZONE_ALREADY_SET,
+            raise FirewallError(ErrorCode.ZONE_ALREADY_SET,
                                 "'%s' already bound to '%s'" % (interface,
                                                                 zone))
         zoi = self.get_zone_of_interface(interface)
         if zoi is not None:
-            raise FirewallError(errors.ZONE_CONFLICT,
+            raise FirewallError(ErrorCode.ZONE_CONFLICT,
                                 "'%s' already bound to '%s'" % (interface,
                                                                  zoi))
 
@@ -495,11 +494,11 @@ class FirewallZone(object):
         self._fw.check_panic()
         zoi = self.get_zone_of_interface(interface)
         if zoi is None:
-            raise FirewallError(errors.UNKNOWN_INTERFACE,
+            raise FirewallError(ErrorCode.UNKNOWN_INTERFACE,
                                 "'%s' is not in any zone" % interface)
         _zone = zoi if zone == "" else self._fw.check_zone(zone)
         if zoi != _zone:
-            raise FirewallError(errors.ZONE_CONFLICT,
+            raise FirewallError(ErrorCode.ZONE_CONFLICT,
                                 "remove_interface(%s, %s): zoi='%s'" % \
                                 (zone, interface, zoi))
 
@@ -547,7 +546,7 @@ class FirewallZone(object):
                 self._check_ipset_applied(source[6:])
             return self._ipset_family(source[6:])
         else:
-            raise FirewallError(errors.INVALID_ADDR, source)
+            raise FirewallError(ErrorCode.INVALID_ADDR, source)
 
     def __source_id(self, source, applied=False):
         self.check_source(source, applied=applied)
@@ -566,10 +565,10 @@ class FirewallZone(object):
         source_id = self.__source_id(source, applied=allow_apply)
 
         if source_id in _obj.sources:
-            raise FirewallError(errors.ZONE_ALREADY_SET,
+            raise FirewallError(ErrorCode.ZONE_ALREADY_SET,
                             "'%s' already bound to '%s'" % (source, _zone))
         if self.get_zone_of_source(source) is not None:
-            raise FirewallError(errors.ZONE_CONFLICT,
+            raise FirewallError(ErrorCode.ZONE_CONFLICT,
                                 "'%s' already bound to a zone" % source)
 
         if use_transaction is None:
@@ -621,11 +620,11 @@ class FirewallZone(object):
             source = source.upper()
         zos = self.get_zone_of_source(source)
         if zos is None:
-            raise FirewallError(errors.UNKNOWN_SOURCE,
+            raise FirewallError(ErrorCode.UNKNOWN_SOURCE,
                                 "'%s' is not in any zone" % source)
         _zone = zos if zone == "" else self._fw.check_zone(zone)
         if zos != _zone:
-            raise FirewallError(errors.ZONE_CONFLICT,
+            raise FirewallError(ErrorCode.ZONE_CONFLICT,
                                 "remove_source(%s, %s): zos='%s'" % \
                                 (zone, source, zos))
 
@@ -719,7 +718,7 @@ class FirewallZone(object):
         _type = self._ipset_type(name)
         if _type not in SOURCE_IPSET_TYPES:
             raise FirewallError(
-                errors.INVALID_IPSET,
+                ErrorCode.INVALID_IPSET,
                 "ipset '%s' with type '%s' not usable as source" % \
                 (name, _type))
 
@@ -1012,7 +1011,7 @@ class FirewallZone(object):
         _obj = self._zones[_zone]
 
         if _obj.forward:
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "forward already enabled in '%s'" % _zone)
 
         if use_transaction is None:
@@ -1040,7 +1039,7 @@ class FirewallZone(object):
         _obj = self._zones[_zone]
 
         if not _obj.forward:
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "forward not enabled in '%s'" % _zone)
 
         if use_transaction is None:

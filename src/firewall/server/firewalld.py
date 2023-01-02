@@ -51,8 +51,7 @@ from firewall.core.io.helper import Helper
 from firewall.core.fw_nm import nm_get_connection_of_interface, \
                                 nm_set_zone_of_connection
 from firewall.core.fw_ifcfg import ifcfg_set_zone_of_interface
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 ############################################################################
 #
@@ -118,7 +117,7 @@ class FirewallD(DbusServiceObject):
             command = command_of_sender(bus, sender)
             if self.fw.policies.access_check("command", command):
                 return
-            raise FirewallError(errors.ACCESS_DENIED, "lockdown is enabled")
+            raise FirewallError(ErrorCode.ACCESS_DENIED, "lockdown is enabled")
 
     # timeout functions
 
@@ -380,7 +379,7 @@ class FirewallD(DbusServiceObject):
         log.debug1("copyRuntimeToPermanent()")
 
         if self.fw._state == "FAILED":
-            raise FirewallError(errors.RUNNING_BUT_FAILED,
+            raise FirewallError(ErrorCode.RUNNING_BUT_FAILED,
                     "Saving runtime to permanent is not allowed while "
                     "firewalld is in FAILED state. The permanent "
                     "configuration must be fixed and then firewalld "
@@ -572,7 +571,7 @@ class FirewallD(DbusServiceObject):
             error = True
 
         if error:
-            raise FirewallError(errors.RT_TO_PERM_FAILED)
+            raise FirewallError(ErrorCode.RT_TO_PERM_FAILED)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # POLICIES
@@ -2407,7 +2406,7 @@ class FirewallD(DbusServiceObject):
             else:
                 query_args = set(["-L", "--list"])
             msg = str(error)
-            if error.code == errors.COMMAND_FAILED:
+            if error.code == ErrorCode.COMMAND_FAILED:
                 if len(set(args) & query_args) <= 0:
                     log.warning(msg)
                 raise FirewallDBusException(msg)

@@ -27,7 +27,7 @@ from firewall.core.logger import log
 from firewall.functions import tempFile, readfile, splitArgs, check_mac, portStr, \
                                check_single_address, check_address, normalizeIP6
 from firewall import config
-from firewall.errors import FirewallError, INVALID_PASSTHROUGH, INVALID_RULE, UNKNOWN_ERROR, INVALID_ADDR
+from firewall.errors import ErrorCode, FirewallError
 from firewall.core.rich import Rich_Accept, Rich_Reject, Rich_Drop, Rich_Mark, Rich_NFLog, \
                                Rich_Masquerade, Rich_ForwardPort, Rich_IcmpBlock, Rich_Tcp_Mss_Clamp
 from firewall.core.base import DEFAULT_ZONE_TARGET
@@ -129,7 +129,7 @@ def common_reverse_passthrough(args):
         ret_args[idx] = replace_args[x]
         return ret_args
 
-    raise FirewallError(INVALID_PASSTHROUGH,
+    raise FirewallError(ErrorCode.INVALID_PASSTHROUGH,
                         "no '-A', '-I' or '-N' arg")
 
 # ipv ebtables also uses this
@@ -152,7 +152,7 @@ def common_check_passthrough(args):
     # intersection of args and not_allowed is not empty, i.e.
     # something from args is not allowed
     if len(args & not_allowed) > 0:
-        raise FirewallError(INVALID_PASSTHROUGH,
+        raise FirewallError(ErrorCode.INVALID_PASSTHROUGH,
                             "arg '%s' is not allowed" %
                             list(args & not_allowed)[0])
 
@@ -163,7 +163,7 @@ def common_check_passthrough(args):
     # empty intersection of args and needed, i.e.
     # none from args contains any needed command
     if len(args & needed) == 0:
-        raise FirewallError(INVALID_PASSTHROUGH,
+        raise FirewallError(ErrorCode.INVALID_PASSTHROUGH,
                             "no '-A', '-I' or '-N' arg")
 
 class ip4tables(object):
@@ -323,7 +323,7 @@ class ip4tables(object):
             rule.pop(i)
             priority = rule.pop(i)
             if type(priority) != int:
-                raise FirewallError(INVALID_RULE, "priority must be followed by a number")
+                raise FirewallError(ErrorCode.INVALID_RULE, "priority must be followed by a number")
 
             table = "filter"
             for opt in [ "-t", "--table" ]:
@@ -358,7 +358,7 @@ class ip4tables(object):
                 if chain not in priority_counts or \
                    priority not in priority_counts[chain] or \
                    priority_counts[chain][priority] <= 0:
-                    raise FirewallError(UNKNOWN_ERROR, "nonexistent or underflow of priority count")
+                    raise FirewallError(ErrorCode.UNKNOWN_ERROR, "nonexistent or underflow of priority count")
 
                 priority_counts[chain][priority] -= 1
             else:
@@ -885,7 +885,7 @@ class ip4tables(object):
         elif check_mac(address):
             # outgoing can not be set
             if opt == "-d":
-                raise FirewallError(INVALID_ADDR, "Can't match a destination MAC.")
+                raise FirewallError(ErrorCode.INVALID_ADDR, "Can't match a destination MAC.")
             return ["-m", "mac", "--mac-source", address.upper()]
         else:
             if check_single_address("ipv6", address):
@@ -987,9 +987,9 @@ class ip4tables(object):
             pass
         elif rich_rule.action:
             if type(rich_rule.action) not in [Rich_Accept, Rich_Reject, Rich_Drop, Rich_Mark]:
-                raise FirewallError(INVALID_RULE, "Unknown action %s" % type(rich_rule.action))
+                raise FirewallError(ErrorCode.INVALID_RULE, "Unknown action %s" % type(rich_rule.action))
         else:
-            raise FirewallError(INVALID_RULE, "No rule action specified.")
+            raise FirewallError(ErrorCode.INVALID_RULE, "No rule action specified.")
 
         if rich_rule.priority == 0:
             if type(rich_rule.element) in [Rich_Masquerade, Rich_ForwardPort, Rich_Tcp_Mss_Clamp] or \
@@ -1005,7 +1005,7 @@ class ip4tables(object):
 
     def _rich_rule_chain_suffix_from_log(self, rich_rule):
         if not rich_rule.log and not rich_rule.audit:
-            raise FirewallError(INVALID_RULE, "Not log or audit")
+            raise FirewallError(ErrorCode.INVALID_RULE, "Not log or audit")
 
         if rich_rule.priority == 0:
             return "log"
@@ -1097,7 +1097,7 @@ class ip4tables(object):
             chain = "%s_%s" % (_policy, chain_suffix)
             rule_action = [ "-j", "MARK", "--set-xmark", rich_rule.action.set ]
         else:
-            raise FirewallError(INVALID_RULE,
+            raise FirewallError(ErrorCode.INVALID_RULE,
                                 "Unknown action %s" % type(rich_rule.action))
 
         rule = ["-t", table, add_del, chain]

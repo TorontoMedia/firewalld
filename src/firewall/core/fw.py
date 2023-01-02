@@ -58,8 +58,7 @@ from firewall.core.io.helper import helper_reader
 from firewall.core.io.policy import policy_reader
 from firewall.core.io.functions import check_on_disk_config
 from firewall.core.rich import Rich_Rule
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 ############################################################################
 #
@@ -214,7 +213,7 @@ class Firewall(object):
         # is there at least support for ipv4 or ipv6
         if not self.ip4tables_enabled and not self.ip6tables_enabled \
            and not self.nftables_enabled:
-            raise FirewallError(errors.UNKNOWN_ERROR, "No IPv4 and IPv6 firewall.")
+            raise FirewallError(ErrorCode.UNKNOWN_ERROR, "No IPv4 and IPv6 firewall.")
 
     def _start_probe_backends(self):
         try:
@@ -540,7 +539,7 @@ class Firewall(object):
         # check minimum required zones
         for z in [ "block", "drop", "trusted" ]:
             if z not in self.zone.get_zones():
-                raise FirewallError(errors.INVALID_ZONE, "Zone '{}' is not available.".format(z))
+                raise FirewallError(ErrorCode.INVALID_ZONE, "Zone '{}' is not available.".format(z))
 
         # check if default_zone is a valid zone
         if self._default_zone not in self.zone.get_zones():
@@ -567,7 +566,7 @@ class Firewall(object):
             else:
                 backend_to_check = self._firewall_backend
             if not self.is_backend_enabled(backend_to_check):
-                raise FirewallError(errors.UNKNOWN_ERROR,
+                raise FirewallError(ErrorCode.UNKNOWN_ERROR,
                         "Firewall backend '{}' is not available.".format(
                             self._firewall_backend))
 
@@ -650,7 +649,7 @@ class Firewall(object):
                     self.flush()
                 except Exception:
                     pass
-                sys.exit(errors.UNKNOWN_ERROR)
+                sys.exit(ErrorCode.UNKNOWN_ERROR)
             # propagate the original exception that caused us to enter failed
             # state.
             raise original_ex
@@ -835,7 +834,7 @@ class Firewall(object):
         for backend in self.all_backends():
             if backend.name == name:
                 return backend
-        raise FirewallError(errors.UNKNOWN_ERROR,
+        raise FirewallError(ErrorCode.UNKNOWN_ERROR,
                             "'%s' backend does not exist" % name)
 
     def get_backend_by_ipv(self, ipv):
@@ -847,7 +846,7 @@ class Firewall(object):
             return self.ip6tables_backend
         elif ipv == "eb" and self.ebtables_enabled:
             return self.ebtables_backend
-        raise FirewallError(errors.INVALID_IPV,
+        raise FirewallError(ErrorCode.INVALID_IPV,
                             "'%s' is not a valid backend or is unavailable" % ipv)
 
     def get_direct_backend_by_ipv(self, ipv):
@@ -857,7 +856,7 @@ class Firewall(object):
             return self.ip6tables_backend
         elif ipv == "eb" and self.ebtables_enabled:
             return self.ebtables_backend
-        raise FirewallError(errors.INVALID_IPV,
+        raise FirewallError(ErrorCode.INVALID_IPV,
                             "'%s' is not a valid backend or is unavailable" % ipv)
 
     def is_backend_enabled(self, name):
@@ -983,7 +982,7 @@ class Firewall(object):
 
         backend = self.get_backend_by_name(backend_name)
         if not backend:
-            raise FirewallError(errors.INVALID_IPV,
+            raise FirewallError(ErrorCode.INVALID_IPV,
                                 "'%s' is not a valid backend" % backend_name)
 
         if not self.is_backend_enabled(backend_name):
@@ -996,7 +995,7 @@ class Firewall(object):
 
         backend = self.get_backend_by_name(backend_name)
         if not backend:
-            raise FirewallError(errors.INVALID_IPV,
+            raise FirewallError(ErrorCode.INVALID_IPV,
                                 "'%s' is not a valid backend" % backend_name)
 
         if not self.is_backend_enabled(backend_name):
@@ -1025,12 +1024,12 @@ class Firewall(object):
 
     def check_panic(self):
         if self._panic:
-            raise FirewallError(errors.PANIC_MODE)
+            raise FirewallError(ErrorCode.PANIC_MODE)
 
     def check_policy(self, policy):
         _policy = policy
         if _policy not in self.policy.get_policies():
-            raise FirewallError(errors.INVALID_POLICY, _policy)
+            raise FirewallError(ErrorCode.INVALID_POLICY, _policy)
         return _policy
 
     def check_zone(self, zone):
@@ -1038,41 +1037,41 @@ class Firewall(object):
         if not _zone or _zone == "":
             _zone = self.get_default_zone()
         if _zone not in self.zone.get_zones():
-            raise FirewallError(errors.INVALID_ZONE, _zone)
+            raise FirewallError(ErrorCode.INVALID_ZONE, _zone)
         return _zone
 
     def check_interface(self, interface):
         if not functions.checkInterface(interface):
-            raise FirewallError(errors.INVALID_INTERFACE, interface)
+            raise FirewallError(ErrorCode.INVALID_INTERFACE, interface)
 
     def check_service(self, service):
         self.service.check_service(service)
 
     def check_port(self, port):
         if not functions.check_port(port):
-            raise FirewallError(errors.INVALID_PORT, port)
+            raise FirewallError(ErrorCode.INVALID_PORT, port)
 
     def check_tcpudp(self, protocol):
         if not protocol:
-            raise FirewallError(errors.MISSING_PROTOCOL)
+            raise FirewallError(ErrorCode.MISSING_PROTOCOL)
         if protocol not in [ "tcp", "udp", "sctp", "dccp" ]:
-            raise FirewallError(errors.INVALID_PROTOCOL,
+            raise FirewallError(ErrorCode.INVALID_PROTOCOL,
                                 "'%s' not in {'tcp'|'udp'|'sctp'|'dccp'}" % \
                                 protocol)
 
     def check_ip(self, ip):
         if not functions.checkIP(ip):
-            raise FirewallError(errors.INVALID_ADDR, ip)
+            raise FirewallError(ErrorCode.INVALID_ADDR, ip)
 
     def check_address(self, ipv, source):
         if ipv == "ipv4":
             if not functions.checkIPnMask(source):
-                raise FirewallError(errors.INVALID_ADDR, source)
+                raise FirewallError(ErrorCode.INVALID_ADDR, source)
         elif ipv == "ipv6":
             if not functions.checkIP6nMask(source):
-                raise FirewallError(errors.INVALID_ADDR, source)
+                raise FirewallError(ErrorCode.INVALID_ADDR, source)
         else:
-            raise FirewallError(errors.INVALID_IPV,
+            raise FirewallError(ErrorCode.INVALID_IPV,
                                 "'%s' not in {'ipv4'|'ipv6'}")
 
     def check_icmptype(self, icmp):
@@ -1082,7 +1081,7 @@ class Firewall(object):
         if not isinstance(timeout, int):
             raise TypeError("%s is %s, expected int" % (timeout, type(timeout)))
         if int(timeout) < 0:
-            raise FirewallError(errors.INVALID_VALUE,
+            raise FirewallError(ErrorCode.INVALID_VALUE,
                                 "timeout '%d' is not positive number" % timeout)
 
     # RELOAD
@@ -1176,7 +1175,7 @@ class Firewall(object):
                         try:
                             self.ipset.add_entry(obj.name, entry)
                         except FirewallError as msg:
-                            if msg.code != errors.ALREADY_ENABLED:
+                            if msg.code != ErrorCode.ALREADY_ENABLED:
                                 raise msg
                 else:
                     self.ipset.add_ipset(obj)
@@ -1211,24 +1210,24 @@ class Firewall(object):
 
     def enable_panic_mode(self):
         if self._panic:
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "panic mode already enabled")
 
         try:
             self.set_policy("PANIC")
         except Exception as msg:
-            raise FirewallError(errors.COMMAND_FAILED, msg)
+            raise FirewallError(ErrorCode.COMMAND_FAILED, msg)
         self._panic = True
 
     def disable_panic_mode(self):
         if not self._panic:
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "panic mode is not enabled")
 
         try:
             self.set_policy("ACCEPT")
         except Exception as msg:
-            raise FirewallError(errors.COMMAND_FAILED, msg)
+            raise FirewallError(ErrorCode.COMMAND_FAILED, msg)
         self._panic = False
 
     def query_panic_mode(self):
@@ -1241,7 +1240,7 @@ class Firewall(object):
 
     def set_log_denied(self, value):
         if value not in config.LOG_DENIED_VALUES:
-            raise FirewallError(errors.INVALID_VALUE,
+            raise FirewallError(ErrorCode.INVALID_VALUE,
                                 "'%s', choose from '%s'" % \
                                 (value, "','".join(config.LOG_DENIED_VALUES)))
 
@@ -1250,7 +1249,7 @@ class Firewall(object):
             self._firewalld_conf.set("LogDenied", value)
             self._firewalld_conf.write()
         else:
-            raise FirewallError(errors.ALREADY_SET, value)
+            raise FirewallError(ErrorCode.ALREADY_SET, value)
 
     # DEFAULT ZONE
 
@@ -1278,7 +1277,7 @@ class Firewall(object):
                     # (not those that were added to specific zone same as default)
                     self.zone.change_zone_of_interface("", iface)
         else:
-            raise FirewallError(errors.ZONE_ALREADY_SET, _zone)
+            raise FirewallError(ErrorCode.ZONE_ALREADY_SET, _zone)
 
     def combine_runtime_with_permanent_settings(self, permanent, runtime):
         combined = permanent.copy()
@@ -1316,6 +1315,6 @@ class Firewall(object):
                     elif old_settings[key] and not new_settings[key]:
                         remove_settings[key] = False
                 else:
-                    raise FirewallError(errors.INVALID_SETTING, "Unhandled setting type {} key {}".format(type(new_settings[key]), key))
+                    raise FirewallError(ErrorCode.INVALID_SETTING, "Unhandled setting type {} key {}".format(type(new_settings[key]), key))
 
         return (add_settings, remove_settings)

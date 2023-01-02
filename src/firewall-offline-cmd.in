@@ -1157,7 +1157,7 @@ if a.check_config:
         fw.start()
         check_on_disk_config(fw)
     except FirewallError as error:
-        cmd.print_and_exit("Configuration error: %s" % error, error.code)
+        cmd.print_and_exit("Configuration error: %s" % error, error.code.value)
     except Exception as msg:
         cmd.fail("Configuration error: %s" % msg)
     sys.exit(0)
@@ -1310,7 +1310,7 @@ try:
             obj = zone_reader(filename, dirname)
         except FirewallError as msg:
             cmd.print_and_exit("Failed to load zone file '%s': %s" % \
-                               (a.new_zone_from_file, msg), msg.code)
+                               (a.new_zone_from_file, msg), msg.code.value)
         except IOError as msg:
             cmd.fail("Failed to load zone file: %s" % msg)
 
@@ -1354,7 +1354,7 @@ try:
             obj = policy_reader(filename, dirname)
         except FirewallError as msg:
             cmd.print_and_exit("Failed to load policy file '%s': %s" % \
-                               (a.new_policy_from_file, msg), msg.code)
+                               (a.new_policy_from_file, msg), msg.code.value)
         except IOError as msg:
             cmd.fail("Failed to load policy file: %s" % msg)
 
@@ -1399,7 +1399,7 @@ try:
             obj = service_reader(filename, dirname)
         except FirewallError as msg:
             cmd.print_and_exit("Failed to load service file '%s': %s" % \
-                               (a.new_service_from_file, msg), msg.code)
+                               (a.new_service_from_file, msg), msg.code.value)
         except IOError as msg:
             cmd.fail("Failed to load service file: %s" % msg)
 
@@ -1462,7 +1462,7 @@ try:
             obj = icmptype_reader(filename, dirname)
         except FirewallError as msg:
             cmd.print_and_exit("Failed to load icmptype file '%s': %s" % \
-                               (a.new_icmptype_from_file, msg), msg.code)
+                               (a.new_icmptype_from_file, msg), msg.code.value)
         except IOError as msg:
             cmd.fail("Failed to load icmptype file: %s" % msg)
 
@@ -1744,7 +1744,7 @@ try:
             obj = ipset_reader(filename, dirname)
         except FirewallError as msg:
             cmd.print_and_exit("Failed to load ipset file '%s': %s" % \
-                               (a.new_ipset_from_file, msg), msg.code)
+                               (a.new_ipset_from_file, msg), msg.code.value)
         except IOError as msg:
             cmd.fail("Failed to load ipset file: %s" % msg)
 
@@ -1928,7 +1928,7 @@ try:
             obj = helper_reader(filename, dirname)
         except FirewallError as msg:
             cmd.print_and_exit("Failed to load helper file '%s': %s" % \
-                               (a.new_helper_from_file, msg), msg.code)
+                               (a.new_helper_from_file, msg), msg.code.value)
         except IOError as msg:
             cmd.fail("Failed to load helper file: %s" % msg)
 
@@ -2657,7 +2657,7 @@ try:
         cmd.print_and_exit("success")
 
 except FirewallError as msg:
-    cmd.print_and_exit("%s" % msg, msg.code)
+    cmd.print_and_exit("%s" % msg, msg.code.value)
 except Exception as msg:
     cmd.fail("%s" % msg)
 else:

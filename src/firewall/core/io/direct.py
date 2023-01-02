@@ -32,8 +32,7 @@ from firewall.core.io.io_object import IO_Object, IO_Object_ContentHandler, \
 from firewall.core.logger import log
 from firewall.core import ipXtables
 from firewall.core import ebtables
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 
 class direct_ContentHandler(IO_Object_ContentHandler):
@@ -47,7 +46,7 @@ class direct_ContentHandler(IO_Object_ContentHandler):
 
         if name == "direct":
             if self.direct:
-                raise FirewallError(errors.PARSE_ERROR,
+                raise FirewallError(ErrorCode.PARSE_ERROR,
                                     "More than one direct tag.")
             self.direct = True
 
@@ -66,7 +65,7 @@ class direct_ContentHandler(IO_Object_ContentHandler):
                 return
             ipv = attrs["ipv"]
             if ipv not in [ "ipv4", "ipv6", "eb" ]:
-                raise FirewallError(errors.INVALID_IPV,
+                raise FirewallError(ErrorCode.INVALID_IPV,
                                     "'%s' not from {'ipv4'|'ipv6'|'eb'}" % ipv)
             table = attrs["table"]
             chain = attrs["chain"]
@@ -200,7 +199,7 @@ class Direct(IO_Object):
     def _check_ipv(self, ipv):
         ipvs = ['ipv4', 'ipv6', 'eb']
         if ipv not in ipvs:
-            raise FirewallError(errors.INVALID_IPV,
+            raise FirewallError(ErrorCode.INVALID_IPV,
                                 "'%s' not in '%s'" % (ipv, ipvs))
 
     def _check_ipv_table(self, ipv, table):
@@ -209,7 +208,7 @@ class Direct(IO_Object):
         tables = ipXtables.BUILT_IN_CHAINS.keys() if ipv in ['ipv4', 'ipv6'] \
                                          else ebtables.BUILT_IN_CHAINS.keys()
         if table not in tables:
-            raise FirewallError(errors.INVALID_TABLE,
+            raise FirewallError(ErrorCode.INVALID_TABLE,
                                 "'%s' not in '%s'" % (table, tables))
 
     # chains
@@ -351,7 +350,7 @@ class Direct(IO_Object):
     def read(self):
         self.cleanup()
         if not self.filename.endswith(".xml"):
-            raise FirewallError(errors.INVALID_NAME,
+            raise FirewallError(ErrorCode.INVALID_NAME,
                                 "'%s' is missing .xml suffix" % self.filename)
         handler = direct_ContentHandler(self)
         parser = sax.make_parser()
@@ -362,7 +361,7 @@ class Direct(IO_Object):
             try:
                 parser.parse(source)
             except sax.SAXParseException as msg:
-                raise FirewallError(errors.INVALID_TYPE,
+                raise FirewallError(ErrorCode.INVALID_TYPE,
                                     "Not a valid file: %s" % \
                                     msg.getException())
 

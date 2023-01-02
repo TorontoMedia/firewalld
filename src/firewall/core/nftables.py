@@ -25,9 +25,7 @@ import ipaddress
 from firewall.core.logger import log
 from firewall.functions import check_mac, getPortRange, normalizeIP6, \
                                check_single_address, check_address
-from firewall.errors import FirewallError, UNKNOWN_ERROR, INVALID_RULE, \
-                            INVALID_ICMPTYPE, INVALID_TYPE, INVALID_ENTRY, \
-                            INVALID_PORT
+from firewall.errors import ErrorCode, FirewallError
 from firewall.core.rich import Rich_Accept, Rich_Reject, Rich_Drop, Rich_Mark, \
                                Rich_Masquerade, Rich_ForwardPort, Rich_IcmpBlock, \
                                Rich_Tcp_Mss_Clamp, Rich_NFLog
@@ -227,7 +225,7 @@ class nftables(object):
         elif "add" in dict:
             return {"delete": copy.deepcopy(dict["add"])}
         else:
-            raise FirewallError(UNKNOWN_ERROR, "Failed to reverse rule")
+            raise FirewallError(ErrorCode.UNKNOWN_ERROR, "Failed to reverse rule")
 
     def _set_rule_replace_priority(self, rule, priority_counts, token):
         for verb in ["add", "insert", "delete"]:
@@ -238,7 +236,7 @@ class nftables(object):
             priority = rule[verb]["rule"][token]
             del rule[verb]["rule"][token]
             if type(priority) != int:
-                raise FirewallError(INVALID_RULE, "priority must be followed by a number")
+                raise FirewallError(ErrorCode.INVALID_RULE, "priority must be followed by a number")
             chain = (rule[verb]["rule"]["family"], rule[verb]["rule"]["chain"]) # family, chain
             # Add the rule to the priority counts. We don't need to store the
             # rule, just bump the ref count for the priority value.
@@ -246,7 +244,7 @@ class nftables(object):
                 if chain not in priority_counts or \
                    priority not in priority_counts[chain] or \
                    priority_counts[chain][priority] <= 0:
-                    raise FirewallError(UNKNOWN_ERROR, "nonexistent or underflow of priority count")
+                    raise FirewallError(ErrorCode.UNKNOWN_ERROR, "nonexistent or underflow of priority count")
 
                 priority_counts[chain][priority] -= 1
             else:
@@ -300,13 +298,13 @@ class nftables(object):
         rule_ref_count = self.rule_ref_count.copy()
         for rule in rules:
             if type(rule) != dict:
-                raise FirewallError(UNKNOWN_ERROR, "rule must be a dictionary, rule: %s" % (rule))
+                raise FirewallError(ErrorCode.UNKNOWN_ERROR, "rule must be a dictionary, rule: %s" % (rule))
 
             for verb in _valid_verbs:
                 if verb in rule:
                     break
             if verb not in rule:
-                raise FirewallError(INVALID_RULE, "no valid verb found, rule: %s" % (rule))
+                raise FirewallError(ErrorCode.INVALID_RULE, "no valid verb found, rule: %s" % (rule))
 
             rule_key = self._get_rule_key(rule)
 
@@ -323,7 +321,7 @@ class nftables(object):
                 elif rule_ref_count[rule_key] == 1:
                     rule_ref_count[rule_key] -= 1
                 else:
-                    raise FirewallError(UNKNOWN_ERROR, "rule ref count bug: rule_key '%s', cnt %d"
+                    raise FirewallError(ErrorCode.UNKNOWN_ERROR, "rule ref count bug: rule_key '%s', cnt %d"
                                                        % (rule_key, rule_ref_count[rule_key]))
             elif rule_key and verb != "delete":
                 rule_ref_count[rule_key] = 1
@@ -478,7 +476,7 @@ class nftables(object):
                                                    "name": TABLE_NAME_POLICY}}})
                 self.created_tables["inet"].remove(TABLE_NAME_POLICY)
         else:
-            raise FirewallError(UNKNOWN_ERROR, "not implemented")
+            raise FirewallError(ErrorCode.UNKNOWN_ERROR, "not implemented")
 
         return rules
 
@@ -959,7 +957,7 @@ class nftables(object):
                                "op": "==",
                                "right": pkttype}}
 
-        raise FirewallError(INVALID_RULE, "Invalid pkttype \"%s\"", pkttype)
+        raise FirewallError(ErrorCode.INVALID_RULE, "Invalid pkttype \"%s\"", pkttype)
 
     def _reject_types_fragment(self, reject_type):
         frags = {
@@ -1016,7 +1014,7 @@ class nftables(object):
         try:
             i = limit.value.index("/")
         except ValueError:
-            raise FirewallError(INVALID_RULE, "Expected '/' in limit")
+            raise FirewallError(ErrorCode.INVALID_RULE, "Expected '/' in limit")
 
         return {"limit": {"rate": int(limit.value[0:i]),
                           "per": rich_to_nft[limit.value[i+1]]}}
@@ -1027,9 +1025,9 @@ class nftables(object):
             pass
         elif rich_rule.action:
             if type(rich_rule.action) not in [Rich_Accept, Rich_Reject, Rich_Drop, Rich_Mark]:
-                raise FirewallError(INVALID_RULE, "Unknown action %s" % type(rich_rule.action))
+                raise FirewallError(ErrorCode.INVALID_RULE, "Unknown action %s" % type(rich_rule.action))
         else:
-            raise FirewallError(INVALID_RULE, "No rule action specified.")
+            raise FirewallError(ErrorCode.INVALID_RULE, "No rule action specified.")
 
         if rich_rule.priority == 0:
             if type(rich_rule.element) in [Rich_Masquerade, Rich_ForwardPort, Rich_Tcp_Mss_Clamp] or \
@@ -1045,7 +1043,7 @@ class nftables(object):
 
     def _rich_rule_chain_suffix_from_log(self, rich_rule):
         if not rich_rule.log and not rich_rule.audit:
-            raise FirewallError(INVALID_RULE, "Not log or audit")
+            raise FirewallError(ErrorCode.INVALID_RULE, "Not log or audit")
 
         if rich_rule.priority == 0:
             return "log"
@@ -1155,7 +1153,7 @@ class nftables(object):
                                           "value": value[0]}}
 
         else:
-            raise FirewallError(INVALID_RULE,
+            raise FirewallError(ErrorCode.INVALID_RULE,
                                 "Unknown action %s" % type(rich_rule.action))
 
         rule = {"family": "inet",
@@ -1195,7 +1193,7 @@ class nftables(object):
         if not rich_family:
             return {}
         if rich_family not in ["ipv4", "ipv6"]:
-            raise FirewallError(INVALID_RULE,
+            raise FirewallError(ErrorCode.INVALID_RULE,
                                 "Invalid family" % rich_family)
 
         return {"match": {"left": {"meta": {"key": "nfproto"}},
@@ -1228,7 +1226,7 @@ class nftables(object):
     def _port_fragment(self, port):
         range = getPortRange(port)
         if isinstance(range, int) and range < 0:
-            raise FirewallError(INVALID_PORT)
+            raise FirewallError(ErrorCode.ErrorCode.INVALID_PORT)
         elif len(range) == 1:
             return range[0]
         else:
@@ -1492,7 +1490,7 @@ class nftables(object):
         if icmp_type in ICMP_TYPES_FRAGMENTS[ipv]:
             return ICMP_TYPES_FRAGMENTS[ipv][icmp_type]
         else:
-            raise FirewallError(INVALID_ICMPTYPE,
+            raise FirewallError(ErrorCode.ErrorCode.INVALID_ICMPTYPE,
                                 "ICMP type '%s' not supported by %s for %s" % (icmp_type, self.name, ipv))
 
     def build_policy_icmp_block_rules(self, enable, policy, ict, rich_rule=None):
@@ -1693,7 +1691,7 @@ class nftables(object):
         if type in types:
             return types[type]
         else:
-            raise FirewallError(INVALID_TYPE,
+            raise FirewallError(ErrorCode.ErrorCode.INVALID_TYPE,
                                 "ipset type name '%s' is not valid" % type)
 
     def build_set_create_rules(self, name, type, options=None):
@@ -1763,7 +1761,7 @@ class nftables(object):
         type_format = obj.type.split(":")[1].split(",")
         entry_tokens = entry.split(",")
         if len(type_format) != len(entry_tokens):
-            raise FirewallError(INVALID_ENTRY,
+            raise FirewallError(ErrorCode.ErrorCode.INVALID_ENTRY,
                                 "Number of values does not match ipset type.")
         fragment = []
         for i, format in enumerate(type_format):

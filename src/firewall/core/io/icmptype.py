@@ -30,8 +30,7 @@ from firewall import config
 from firewall.core.io.io_object import IO_Object, \
     IO_Object_ContentHandler, IO_Object_XMLGenerator
 from firewall.core.logger import log
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 class IcmpType(IO_Object):
     IMPORT_EXPORT_STRUCTURE = (
@@ -69,7 +68,7 @@ class IcmpType(IO_Object):
         if item == "destination":
             for destination in config:
                 if destination not in [ "ipv4", "ipv6" ]:
-                    raise FirewallError(errors.INVALID_DESTINATION,
+                    raise FirewallError(ErrorCode.INVALID_DESTINATION,
                                         "'%s' not from {'ipv4'|'ipv6'}" % \
                                         destination)
 
@@ -99,7 +98,7 @@ class icmptype_ContentHandler(IO_Object_ContentHandler):
 def icmptype_reader(filename, path):
     icmptype = IcmpType()
     if not filename.endswith(".xml"):
-        raise FirewallError(errors.INVALID_NAME,
+        raise FirewallError(ErrorCode.INVALID_NAME,
                             "%s is missing .xml suffix" % filename)
     icmptype.name = filename[:-4]
     icmptype.check_name(icmptype.name)
@@ -117,7 +116,7 @@ def icmptype_reader(filename, path):
         try:
             parser.parse(source)
         except sax.SAXParseException as msg:
-            raise FirewallError(errors.INVALID_ICMPTYPE,
+            raise FirewallError(ErrorCode.INVALID_ICMPTYPE,
                                 "not a valid icmptype file: %s" % \
                                 msg.getException())
     del handler

@@ -40,8 +40,7 @@ else:
         _nm_imported = False
 _nm_client = None
 
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 from firewall.core.logger import log
 import dbus
 
@@ -49,7 +48,7 @@ def check_nm_imported():
     """Check function to raise a MISSING_IMPORT error if the import of NM failed
     """
     if not _nm_imported:
-        raise FirewallError(errors.MISSING_IMPORT, "gi.repository.NM = 1.0")
+        raise FirewallError(ErrorCode.MISSING_IMPORT, "gi.repository.NM = 1.0")
 
 def nm_is_imported():
     """Returns true if NM has been properly imported

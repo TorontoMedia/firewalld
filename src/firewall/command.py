@@ -25,8 +25,7 @@ __all__ = [ "FirewallCommand" ]
 
 import sys
 
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 from dbus.exceptions import DBusException
 from firewall.functions import checkIPnMask, checkIP6nMask, check_mac, \
     check_port, check_single_address
@@ -131,8 +130,8 @@ class FirewallCommand(object):
                 else:
                     msg = str(msg)
                 code = FirewallError.get_code(msg)
-                if code in [ errors.ALREADY_ENABLED, errors.NOT_ENABLED,
-                             errors.ZONE_ALREADY_SET, errors.ALREADY_SET ]:
+                if code in [ ErrorCode.ALREADY_ENABLED, ErrorCode.NOT_ENABLED,
+                             ErrorCode.ZONE_ALREADY_SET, ErrorCode.ALREADY_SET ]:
                     code = 0
                 if len(option) > 1:
                     self.print_warning("Warning: %s" % msg)
@@ -159,7 +158,7 @@ class FirewallCommand(object):
                 # UNKNOWN_ERROR. This could happen within sequences
                 # where parsing failed with different errors like
                 # INVALID_PORT and INVALID_PROTOCOL.
-                sys.exit(errors.UNKNOWN_ERROR)
+                sys.exit(ErrorCode.UNKNOWN_ERROR)
 
     def add_sequence(self, option, action_method, query_method, parse_method, # pylint: disable=R0913
                      message, no_exit=False):
@@ -256,7 +255,7 @@ class FirewallCommand(object):
         if not checkIPnMask(value) and not checkIP6nMask(value) \
            and not check_mac(value) and not \
            (value.startswith("ipset:") and len(value) > 6):
-            raise FirewallError(errors.INVALID_ADDR,
+            raise FirewallError(ErrorCode.INVALID_ADDR,
                                 "'%s' is no valid IPv4, IPv6 or MAC address, nor an ipset" % value)
         return value
 
@@ -264,13 +263,13 @@ class FirewallCommand(object):
         try:
             (port, proto) = value.split(separator)
         except ValueError:
-            raise FirewallError(errors.INVALID_PORT, "bad port (most likely "
+            raise FirewallError(ErrorCode.INVALID_PORT, "bad port (most likely "
                                 "missing protocol), correct syntax is "
                                 "portid[-portid]%sprotocol" % separator)
         if not check_port(port):
-            raise FirewallError(errors.INVALID_PORT, port)
+            raise FirewallError(ErrorCode.INVALID_PORT, port)
         if proto not in [ "tcp", "udp", "sctp", "dccp" ]:
-            raise FirewallError(errors.INVALID_PROTOCOL,
+            raise FirewallError(ErrorCode.INVALID_PROTOCOL,
                                 "'%s' not in {'tcp'|'udp'|'sctp'|'dccp'}" % \
                                 proto)
         return (port, proto)
@@ -302,26 +301,26 @@ class FirewallCommand(object):
                 # ignore if option in compat mode
                 pass
             else:
-                raise FirewallError(errors.INVALID_FORWARD,
+                raise FirewallError(ErrorCode.INVALID_FORWARD,
                                     "invalid forward port arg '%s'" % (opt))
         if not port:
-            raise FirewallError(errors.INVALID_FORWARD, "missing port")
+            raise FirewallError(ErrorCode.INVALID_FORWARD, "missing port")
         if not protocol:
-            raise FirewallError(errors.INVALID_FORWARD, "missing protocol")
+            raise FirewallError(ErrorCode.INVALID_FORWARD, "missing protocol")
         if not (toport or toaddr):
-            raise FirewallError(errors.INVALID_FORWARD, "missing destination")
+            raise FirewallError(ErrorCode.INVALID_FORWARD, "missing destination")
 
         if not check_port(port):
-            raise FirewallError(errors.INVALID_PORT, port)
+            raise FirewallError(ErrorCode.INVALID_PORT, port)
         if protocol not in [ "tcp", "udp", "sctp", "dccp" ]:
-            raise FirewallError(errors.INVALID_PROTOCOL,
+            raise FirewallError(ErrorCode.INVALID_PROTOCOL,
                                 "'%s' not in {'tcp'|'udp'|'sctp'|'dccp'}" % \
                                 protocol)
         if toport and not check_port(toport):
-            raise FirewallError(errors.INVALID_PORT, toport)
+            raise FirewallError(ErrorCode.INVALID_PORT, toport)
         if toaddr and not check_single_address("ipv4", toaddr):
             if compat or not check_single_address("ipv6", toaddr):
-                raise FirewallError(errors.INVALID_ADDR, toaddr)
+                raise FirewallError(ErrorCode.INVALID_ADDR, toaddr)
 
         return (port, protocol, toport, toaddr)
 
@@ -332,13 +331,13 @@ class FirewallCommand(object):
         elif len(args) == 2:
             return args
         else:
-            raise FirewallError(errors.INVALID_OPTION,
+            raise FirewallError(ErrorCode.INVALID_OPTION,
                                 "invalid ipset option '%s'" % (value))
 
     def check_destination_ipv(self, value):
         ipvs = [ "ipv4", "ipv6", ]
         if value not in ipvs:
-            raise FirewallError(errors.INVALID_IPV,
+            raise FirewallError(ErrorCode.INVALID_IPV,
                                 "invalid argument: %s (choose from '%s')" % \
                                 (value, "', '".join(ipvs)))
         return value
@@ -347,14 +346,14 @@ class FirewallCommand(object):
         try:
             (ipv, destination) = value.split(":", 1)
         except ValueError:
-            raise FirewallError(errors.INVALID_DESTINATION,
+            raise FirewallError(ErrorCode.INVALID_DESTINATION,
                                 "destination syntax is ipv:address[/mask]")
         return (self.check_destination_ipv(ipv), destination)
 
     def check_ipv(self, value):
         ipvs = [ "ipv4", "ipv6", "eb" ]
         if value not in ipvs:
-            raise FirewallError(errors.INVALID_IPV,
+            raise FirewallError(ErrorCode.INVALID_IPV,
                                 "invalid argument: %s (choose from '%s')" % \
                                 (value, "', '".join(ipvs)))
         return value
@@ -362,7 +361,7 @@ class FirewallCommand(object):
     def check_helper_family(self, value):
         ipvs = [ "", "ipv4", "ipv6" ]
         if value not in ipvs:
-            raise FirewallError(errors.INVALID_IPV,
+            raise FirewallError(ErrorCode.INVALID_IPV,
                                 "invalid argument: %s (choose from '%s')" % \
                                 (value, "', '".join(ipvs)))
         return value
@@ -370,10 +369,10 @@ class FirewallCommand(object):
     def check_module(self, value):
         if not value.startswith("nf_conntrack_"):
             raise FirewallError(
-                errors.INVALID_MODULE,
+                ErrorCode.INVALID_MODULE,
                 "'%s' does not start with 'nf_conntrack_'" % value)
         if len(value.replace("nf_conntrack_", "")) < 1:
-            raise FirewallError(errors.INVALID_MODULE,
+            raise FirewallError(ErrorCode.INVALID_MODULE,
                                 "Module name '%s' too short" % value)
         return value
 
@@ -542,8 +541,8 @@ class FirewallCommand(object):
             raise
         self.fail_if_not_authorized(exception_message)
         code = FirewallError.get_code(str(exception_message))
-        if code in [ errors.ALREADY_ENABLED, errors.NOT_ENABLED,
-                     errors.ZONE_ALREADY_SET, errors.ALREADY_SET ]:
+        if code in [ ErrorCode.ALREADY_ENABLED, ErrorCode.NOT_ENABLED,
+                     ErrorCode.ZONE_ALREADY_SET, ErrorCode.ALREADY_SET ]:
             self.print_warning("Warning: %s" % exception_message)
         else:
             self.print_and_exit("Error: %s" % exception_message, code)
@@ -552,7 +551,7 @@ class FirewallCommand(object):
         if "NotAuthorizedException" in exception_message:
             msg = """Authorization failed.
     Make sure polkit agent is running or run the application as superuser."""
-            self.print_and_exit(msg, errors.NOT_AUTHORIZED)
+            self.print_and_exit(msg, ErrorCode.NOT_AUTHORIZED)
 
     def deactivate_exception_handler(self):
         self.__use_exception_handler = False

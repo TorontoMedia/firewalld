@@ -31,8 +31,7 @@ from firewall.core.io.io_object import IO_Object, \
     IO_Object_ContentHandler, IO_Object_XMLGenerator, check_port, \
     check_tcpudp
 from firewall.core.logger import log
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 class Helper(IO_Object):
     IMPORT_EXPORT_STRUCTURE = (
@@ -75,7 +74,7 @@ class Helper(IO_Object):
     def check_ipv(self, ipv):
         ipvs = [ 'ipv4', 'ipv6' ]
         if ipv not in ipvs:
-            raise FirewallError(errors.INVALID_IPV,
+            raise FirewallError(ErrorCode.INVALID_IPV,
                                 "'%s' not in '%s'" % (ipv, ipvs))
 
     def _check_config(self, config, item, all_config, all_io_objects):
@@ -86,10 +85,10 @@ class Helper(IO_Object):
         elif item == "module":
             if not config.startswith("nf_conntrack_"):
                 raise FirewallError(
-                    errors.INVALID_MODULE,
+                    ErrorCode.INVALID_MODULE,
                     "'%s' does not start with 'nf_conntrack_'" % config)
             if len(config.replace("nf_conntrack_", "")) < 1:
-                raise FirewallError(errors.INVALID_MODULE,
+                raise FirewallError(ErrorCode.INVALID_MODULE,
                                     "Module name '%s' too short" % config)
 
 # PARSER
@@ -107,12 +106,12 @@ class helper_ContentHandler(IO_Object_ContentHandler):
             if "module" in attrs:
                 if not attrs["module"].startswith("nf_conntrack_"):
                     raise FirewallError(
-                        errors.INVALID_MODULE,
+                        ErrorCode.INVALID_MODULE,
                         "'%s' does not start with 'nf_conntrack_'" % \
                         attrs["module"])
                 if len(attrs["module"].replace("nf_conntrack_", "")) < 1:
                     raise FirewallError(
-                        errors.INVALID_MODULE,
+                        ErrorCode.INVALID_MODULE,
                         "Module name '%s' too short" % attrs["module"])
                 self.item.module = attrs["module"]
         elif name == "short":
@@ -132,7 +131,7 @@ class helper_ContentHandler(IO_Object_ContentHandler):
 def helper_reader(filename, path):
     helper = Helper()
     if not filename.endswith(".xml"):
-        raise FirewallError(errors.INVALID_NAME,
+        raise FirewallError(ErrorCode.INVALID_NAME,
                             "'%s' is missing .xml suffix" % filename)
     helper.name = filename[:-4]
     helper.check_name(helper.name)
@@ -150,7 +149,7 @@ def helper_reader(filename, path):
         try:
             parser.parse(source)
         except sax.SAXParseException as msg:
-            raise FirewallError(errors.INVALID_HELPER,
+            raise FirewallError(ErrorCode.INVALID_HELPER,
                                 "not a valid helper file: %s" % \
                                 msg.getException())
     del handler

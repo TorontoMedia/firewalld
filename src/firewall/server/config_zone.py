@@ -34,8 +34,7 @@ from firewall.server.dbus import DbusServiceObject
 from firewall.server.decorators import handle_exceptions, \
     dbus_handle_exceptions, dbus_service_method, \
     dbus_polkit_require_auth
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 from firewall.functions import portStr, portInPortRange, coalescePortRange, \
                                breakPortRange
 
@@ -218,10 +217,10 @@ class FirewallDConfigZone(DbusServiceObject):
 
         for iface in added_ifaces:
             if self.parent.getZoneOfInterface(iface):
-                raise FirewallError(errors.ZONE_CONFLICT, iface)  # or move to new zone ?
+                raise FirewallError(ErrorCode.ZONE_CONFLICT, iface)  # or move to new zone ?
         for source in added_sources:
             if self.parent.getZoneOfSource(source):
-                raise FirewallError(errors.ZONE_CONFLICT, source) # or move to new zone ?
+                raise FirewallError(ErrorCode.ZONE_CONFLICT, source) # or move to new zone ?
 
     @dbus_service_method(config.dbus.DBUS_INTERFACE_CONFIG_ZONE,
                          in_signature="(sssbsasa(ss)asba(ssss)asasasasa(ss)b)")
@@ -421,7 +420,7 @@ class FirewallDConfigZone(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if service in settings[5]:
-            raise FirewallError(errors.ALREADY_ENABLED, service)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, service)
         settings[5].append(service)
         self.update(settings)
 
@@ -434,7 +433,7 @@ class FirewallDConfigZone(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if service not in settings[5]:
-            raise FirewallError(errors.NOT_ENABLED, service)
+            raise FirewallError(ErrorCode.NOT_ENABLED, service)
         settings[5].remove(service)
         self.update(settings)
 
@@ -487,7 +486,7 @@ class FirewallDConfigZone(DbusServiceObject):
         existing_port_ids = list(filter(lambda x: x[1] == protocol, settings[6]))
         for port_id in existing_port_ids:
             if portInPortRange(port, port_id[0]):
-                raise FirewallError(errors.ALREADY_ENABLED,
+                raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                     "%s:%s" % (port, protocol))
         added_ranges, removed_ranges = coalescePortRange(port, [_port for (_port, _protocol) in existing_port_ids])
         for range in removed_ranges:
@@ -511,7 +510,7 @@ class FirewallDConfigZone(DbusServiceObject):
             if portInPortRange(port, port_id[0]):
                 break
         else:
-            raise FirewallError(errors.NOT_ENABLED, "%s:%s" % (port, protocol))
+            raise FirewallError(ErrorCode.NOT_ENABLED, "%s:%s" % (port, protocol))
         added_ranges, removed_ranges = breakPortRange(port, [_port for (_port, _protocol) in existing_port_ids])
         for range in removed_ranges:
             settings[6].remove((portStr(range, "-"), protocol))
@@ -563,7 +562,7 @@ class FirewallDConfigZone(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if protocol in settings[13]:
-            raise FirewallError(errors.ALREADY_ENABLED, protocol)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, protocol)
         settings[13].append(protocol)
         self.update(settings)
 
@@ -576,7 +575,7 @@ class FirewallDConfigZone(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if protocol not in settings[13]:
-            raise FirewallError(errors.NOT_ENABLED, protocol)
+            raise FirewallError(ErrorCode.NOT_ENABLED, protocol)
         settings[13].remove(protocol)
         self.update(settings)
 
@@ -629,7 +628,7 @@ class FirewallDConfigZone(DbusServiceObject):
         existing_port_ids = list(filter(lambda x: x[1] == protocol, settings[14]))
         for port_id in existing_port_ids:
             if portInPortRange(port, port_id[0]):
-                raise FirewallError(errors.ALREADY_ENABLED,
+                raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                     "%s:%s" % (port, protocol))
         added_ranges, removed_ranges = coalescePortRange(port, [_port for (_port, _protocol) in existing_port_ids])
         for range in removed_ranges:
@@ -653,7 +652,7 @@ class FirewallDConfigZone(DbusServiceObject):
             if portInPortRange(port, port_id[0]):
                 break
         else:
-            raise FirewallError(errors.NOT_ENABLED, "%s:%s" % (port, protocol))
+            raise FirewallError(ErrorCode.NOT_ENABLED, "%s:%s" % (port, protocol))
         added_ranges, removed_ranges = breakPortRange(port, [_port for (_port, _protocol) in existing_port_ids])
         for range in removed_ranges:
             settings[14].remove((portStr(range, "-"), protocol))
@@ -705,7 +704,7 @@ class FirewallDConfigZone(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if icmptype in settings[7]:
-            raise FirewallError(errors.ALREADY_ENABLED, icmptype)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, icmptype)
         settings[7].append(icmptype)
         self.update(settings)
 
@@ -718,7 +717,7 @@ class FirewallDConfigZone(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if icmptype not in settings[7]:
-            raise FirewallError(errors.NOT_ENABLED, icmptype)
+            raise FirewallError(ErrorCode.NOT_ENABLED, icmptype)
         settings[7].remove(icmptype)
         self.update(settings)
 
@@ -757,7 +756,7 @@ class FirewallDConfigZone(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if settings[15]:
-            raise FirewallError(errors.ALREADY_ENABLED, "icmp-block-inversion")
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, "icmp-block-inversion")
         settings[15] = True
         self.update(settings)
 
@@ -768,7 +767,7 @@ class FirewallDConfigZone(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if not settings[15]:
-            raise FirewallError(errors.NOT_ENABLED, "icmp-block-inversion")
+            raise FirewallError(ErrorCode.NOT_ENABLED, "icmp-block-inversion")
         settings[15] = False
         self.update(settings)
 
@@ -806,7 +805,7 @@ class FirewallDConfigZone(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if settings[8]:
-            raise FirewallError(errors.ALREADY_ENABLED, "masquerade")
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, "masquerade")
         settings[8] = True
         self.update(settings)
 
@@ -817,7 +816,7 @@ class FirewallDConfigZone(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if not settings[8]:
-            raise FirewallError(errors.NOT_ENABLED, "masquerade")
+            raise FirewallError(ErrorCode.NOT_ENABLED, "masquerade")
         settings[8] = False
         self.update(settings)
 
@@ -871,7 +870,7 @@ class FirewallDConfigZone(DbusServiceObject):
         fwp_id = (port, protocol, str(toport), str(toaddr))
         settings = list(self.getSettings())
         if fwp_id in settings[9]:
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "%s:%s:%s:%s" % (port, protocol, toport,
                                                  toaddr))
         settings[9].append(fwp_id)
@@ -891,7 +890,7 @@ class FirewallDConfigZone(DbusServiceObject):
         fwp_id = (port, protocol, str(toport), str(toaddr))
         settings = list(self.getSettings())
         if fwp_id not in settings[9]:
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "%s:%s:%s:%s" % (port, protocol, toport,
                                                  toaddr))
         settings[9].remove(fwp_id)
@@ -941,7 +940,7 @@ class FirewallDConfigZone(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if interface in settings[10]:
-            raise FirewallError(errors.ALREADY_ENABLED, interface)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, interface)
         settings[10].append(interface)
         self.update(settings)
 
@@ -956,7 +955,7 @@ class FirewallDConfigZone(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if interface not in settings[10]:
-            raise FirewallError(errors.NOT_ENABLED, interface)
+            raise FirewallError(ErrorCode.NOT_ENABLED, interface)
         settings[10].remove(interface)
         self.update(settings)
 
@@ -1001,7 +1000,7 @@ class FirewallDConfigZone(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if source in settings[11]:
-            raise FirewallError(errors.ALREADY_ENABLED, source)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, source)
         settings[11].append(source)
         self.update(settings)
 
@@ -1014,7 +1013,7 @@ class FirewallDConfigZone(DbusServiceObject):
         self.parent.accessCheck(sender)
         settings = list(self.getSettings())
         if source not in settings[11]:
-            raise FirewallError(errors.NOT_ENABLED, source)
+            raise FirewallError(ErrorCode.NOT_ENABLED, source)
         settings[11].remove(source)
         self.update(settings)
 
@@ -1058,7 +1057,7 @@ class FirewallDConfigZone(DbusServiceObject):
         settings = list(self.getSettings())
         rule_str = str(Rich_Rule(rule_str=rule))
         if rule_str in settings[12]:
-            raise FirewallError(errors.ALREADY_ENABLED, rule)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, rule)
         settings[12].append(rule_str)
         self.update(settings)
 
@@ -1072,7 +1071,7 @@ class FirewallDConfigZone(DbusServiceObject):
         settings = list(self.getSettings())
         rule_str = str(Rich_Rule(rule_str=rule))
         if rule_str not in settings[12]:
-            raise FirewallError(errors.NOT_ENABLED, rule)
+            raise FirewallError(ErrorCode.NOT_ENABLED, rule)
         settings[12].remove(rule_str)
         self.update(settings)
 

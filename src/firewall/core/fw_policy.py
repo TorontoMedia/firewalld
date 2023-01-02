@@ -14,8 +14,7 @@ from firewall.core.rich import Rich_Rule, Rich_Accept, \
     Rich_Masquerade, Rich_ForwardPort, Rich_SourcePort, Rich_IcmpBlock, \
     Rich_IcmpType, Rich_Tcp_Mss_Clamp
 from firewall.core.fw_transaction import FirewallTransaction
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 from firewall.core.base import SOURCE_IPSET_TYPES
 
 class FirewallPolicy(object):
@@ -221,7 +220,7 @@ class FirewallPolicy(object):
 
     def check_ingress_zone(self, zone):
         if not zone:
-            raise FirewallError(errors.INVALID_ZONE)
+            raise FirewallError(ErrorCode.INVALID_ZONE)
         if zone not in ["HOST", "ANY"]:
             self._fw.check_zone(zone)
 
@@ -238,7 +237,7 @@ class FirewallPolicy(object):
 
         zone_id = self.__ingress_zone_id(zone)
         if zone_id in _obj.ingress_zones:
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "'%s' already in '%s'" % (zone, _policy))
 
         if use_transaction is None:
@@ -277,7 +276,7 @@ class FirewallPolicy(object):
 
         zone_id = self.__ingress_zone_id(zone)
         if zone_id not in _obj.ingress_zones:
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "'%s' not in '%s'" % (zone, _policy))
 
         if use_transaction is None:
@@ -319,7 +318,7 @@ class FirewallPolicy(object):
 
     def check_egress_zone(self, zone):
         if not zone:
-            raise FirewallError(errors.INVALID_ZONE)
+            raise FirewallError(ErrorCode.INVALID_ZONE)
         if zone not in ["HOST", "ANY"]:
             self._fw.check_zone(zone)
 
@@ -336,7 +335,7 @@ class FirewallPolicy(object):
 
         zone_id = self.__egress_zone_id(zone)
         if zone_id in _obj.egress_zones:
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "'%s' already in '%s'" % (zone, _policy))
 
         if use_transaction is None:
@@ -375,7 +374,7 @@ class FirewallPolicy(object):
 
         zone_id = self.__egress_zone_id(zone)
         if zone_id not in _obj.egress_zones:
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "'%s' not in '%s'" % (zone, _policy))
 
         if use_transaction is None:
@@ -453,7 +452,7 @@ class FirewallPolicy(object):
         rule_id = self.__rule_id(rule)
         if rule_id in _obj.rules_str:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "'%s' already in '%s'" % (rule, _name))
 
         if use_transaction is None:
@@ -484,7 +483,7 @@ class FirewallPolicy(object):
         rule_id = self.__rule_id(rule)
         if rule_id not in _obj.rules_str:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "'%s' not in '%s'" % (rule, _name))
 
         if use_transaction is None:
@@ -531,7 +530,7 @@ class FirewallPolicy(object):
         service_id = self.__service_id(service)
         if service_id in _obj.services:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "'%s' already in '%s'" % (service, _name))
 
         if use_transaction is None:
@@ -562,7 +561,7 @@ class FirewallPolicy(object):
         service_id = self.__service_id(service)
         if service_id not in _obj.services:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "'%s' not in '%s'" % (service, _name))
 
         if use_transaction is None:
@@ -596,7 +595,7 @@ class FirewallPolicy(object):
             try:
                 _helper = self._fw.helper.get_helper(helper)
             except FirewallError:
-                raise FirewallError(errors.INVALID_HELPER, helper)
+                raise FirewallError(ErrorCode.INVALID_HELPER, helper)
             _helpers.append(_helper)
         return _helpers
 
@@ -609,7 +608,7 @@ class FirewallPolicy(object):
             try:
                 helper = self._fw.helper.get_helper(module)
             except FirewallError:
-                raise FirewallError(errors.INVALID_HELPER, module)
+                raise FirewallError(ErrorCode.INVALID_HELPER, module)
             if len(helper.ports) < 1:
                 _module_short_name = get_nf_conntrack_short_name(helper.module)
                 try:
@@ -644,7 +643,7 @@ class FirewallPolicy(object):
         for port_id in existing_port_ids:
             if portInPortRange(port, port_id[0]):
                 _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-                raise FirewallError(errors.ALREADY_ENABLED,
+                raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                     "'%s:%s' already in '%s'" % (port, protocol, _name))
 
         added_ranges, removed_ranges = coalescePortRange(port, [_port for (_port, _protocol) in existing_port_ids])
@@ -688,7 +687,7 @@ class FirewallPolicy(object):
                 break
         else:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "'%s:%s' not in '%s'" % (port, protocol, _name))
 
         added_ranges, removed_ranges = breakPortRange(port, [_port for (_port, _protocol) in existing_port_ids])
@@ -735,11 +734,11 @@ class FirewallPolicy(object):
 
     def check_protocol(self, protocol):
         if not checkProtocol(protocol):
-            raise FirewallError(errors.INVALID_PROTOCOL, protocol)
+            raise FirewallError(ErrorCode.INVALID_PROTOCOL, protocol)
 
     def check_tcp_mss_clamp(self, tcp_mss_clamp_value):
         if not checkTcpMssClamp(tcp_mss_clamp_value):
-            raise FirewallError(errors.INVALID_RULE, "tcp-mss-clamp value must be greater than or equal to 536, or the value 'pmtu'. Invalid value '%s'" % (tcp_mss_clamp_value))
+            raise FirewallError(ErrorCode.INVALID_RULE, "tcp-mss-clamp value must be greater than or equal to 536, or the value 'pmtu'. Invalid value '%s'" % (tcp_mss_clamp_value))
 
     def __protocol_id(self, protocol):
         self.check_protocol(protocol)
@@ -755,7 +754,7 @@ class FirewallPolicy(object):
         protocol_id = self.__protocol_id(protocol)
         if protocol_id in _obj.protocols:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "'%s' already in '%s'" % (protocol, _name))
 
         if use_transaction is None:
@@ -786,7 +785,7 @@ class FirewallPolicy(object):
         protocol_id = self.__protocol_id(protocol)
         if protocol_id not in _obj.protocols:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "'%s' not in '%s'" % (protocol, _name))
 
         if use_transaction is None:
@@ -832,7 +831,7 @@ class FirewallPolicy(object):
         for port_id in existing_port_ids:
             if portInPortRange(port, port_id[0]):
                 _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-                raise FirewallError(errors.ALREADY_ENABLED,
+                raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                     "'%s:%s' already in '%s'" % (port, protocol, _name))
 
         added_ranges, removed_ranges = coalescePortRange(port, [_port for (_port, _protocol) in existing_port_ids])
@@ -876,7 +875,7 @@ class FirewallPolicy(object):
                 break
         else:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "'%s:%s' not in '%s'" % (port, protocol, _name))
 
         added_ranges, removed_ranges = breakPortRange(port, [_port for (_port, _protocol) in existing_port_ids])
@@ -930,7 +929,7 @@ class FirewallPolicy(object):
 
         if _obj.masquerade:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "masquerade already enabled in '%s'" % _name)
 
         if use_transaction is None:
@@ -959,7 +958,7 @@ class FirewallPolicy(object):
 
         if not _obj.masquerade:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "masquerade not enabled in '%s'" % _name)
 
         if use_transaction is None:
@@ -992,10 +991,10 @@ class FirewallPolicy(object):
             self._fw.check_port(toport)
         if toaddr:
             if not check_single_address(ipv, toaddr):
-                raise FirewallError(errors.INVALID_ADDR, toaddr)
+                raise FirewallError(ErrorCode.INVALID_ADDR, toaddr)
         if not toport and not toaddr:
             raise FirewallError(
-                errors.INVALID_FORWARD,
+                ErrorCode.INVALID_FORWARD,
                 "port-forwarding is missing to-port AND to-addr")
 
     def __forward_port_id(self, port, protocol, toport=None, toaddr=None):
@@ -1017,7 +1016,7 @@ class FirewallPolicy(object):
         forward_id = self.__forward_port_id(port, protocol, toport, toaddr)
         if forward_id in _obj.forward_ports:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "'%s:%s:%s:%s' already in '%s'" % \
                                 (port, protocol, toport, toaddr, _name))
 
@@ -1050,7 +1049,7 @@ class FirewallPolicy(object):
         forward_id = self.__forward_port_id(port, protocol, toport, toaddr)
         if forward_id not in _obj.forward_ports:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "'%s:%s:%s:%s' not in '%s'" % \
                                 (port, protocol, toport, toaddr, _name))
 
@@ -1101,7 +1100,7 @@ class FirewallPolicy(object):
         icmp_id = self.__icmp_block_id(icmp)
         if icmp_id in _obj.icmp_blocks:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "'%s' already in '%s'" % (icmp, _name))
 
         if use_transaction is None:
@@ -1131,7 +1130,7 @@ class FirewallPolicy(object):
         icmp_id = self.__icmp_block_id(icmp)
         if icmp_id not in _obj.icmp_blocks:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "'%s' not in '%s'" % (icmp, _name))
 
         if use_transaction is None:
@@ -1170,7 +1169,7 @@ class FirewallPolicy(object):
         if _obj.icmp_block_inversion:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
             raise FirewallError(
-                errors.ALREADY_ENABLED,
+                ErrorCode.ALREADY_ENABLED,
                 "icmp-block-inversion already enabled in '%s'" % _name)
 
         if use_transaction is None:
@@ -1228,7 +1227,7 @@ class FirewallPolicy(object):
         if not _obj.icmp_block_inversion:
             _name = _obj.derived_from_zone if _obj.derived_from_zone else _policy
             raise FirewallError(
-                errors.NOT_ENABLED,
+                ErrorCode.NOT_ENABLED,
                 "icmp-block-inversion not enabled in '%s'" % _name)
 
         if use_transaction is None:
@@ -1323,7 +1322,7 @@ class FirewallPolicy(object):
         _type = self.__ipset_type(name)
         if _type not in SOURCE_IPSET_TYPES:
             raise FirewallError(
-                errors.INVALID_IPSET,
+                ErrorCode.INVALID_IPSET,
                 "ipset '%s' with type '%s' not usable as source" % \
                 (name, _type))
 
@@ -1341,7 +1340,7 @@ class FirewallPolicy(object):
             if rule.family:
                 # rule family is defined by user, no way to change it
                 if rule.family != source_ipv:
-                    raise FirewallError(errors.INVALID_RULE,
+                    raise FirewallError(ErrorCode.INVALID_RULE,
                                         "Source address family '%s' conflicts with rule family '%s'." % (source_ipv, rule.family))
             else:
                 # use the source family as rule family
@@ -1365,7 +1364,7 @@ class FirewallPolicy(object):
                 if len(svc.destination) > 0:
                     if rule.destination:
                         # we can not use two destinations at the same time
-                        raise FirewallError(errors.INVALID_RULE,
+                        raise FirewallError(ErrorCode.INVALID_RULE,
                                             "Destination conflict with service.")
                     for ipv in ipvs:
                         if ipv in svc.destination and backend.is_ipv_supported(ipv):
@@ -1490,14 +1489,14 @@ class FirewallPolicy(object):
 
                 if rule.family and ict.destination and \
                    rule.family not in ict.destination:
-                    raise FirewallError(errors.INVALID_ICMPTYPE,
+                    raise FirewallError(ErrorCode.INVALID_ICMPTYPE,
                                         "rich rule family '%s' conflicts with icmp type '%s'" % \
                                         (rule.family, rule.element.name))
 
                 if type(rule.element) == Rich_IcmpBlock and \
                    rule.action and type(rule.action) == Rich_Accept:
                     # icmp block might have reject or drop action, but not accept
-                    raise FirewallError(errors.INVALID_RULE,
+                    raise FirewallError(ErrorCode.INVALID_RULE,
                                         "IcmpBlock not usable with accept action")
 
                 rules = backend.build_policy_icmp_block_rules(enable, policy, ict, rule)
@@ -1510,7 +1509,7 @@ class FirewallPolicy(object):
 
             # EVERYTHING ELSE
             else:
-                raise FirewallError(errors.INVALID_RULE, "Unknown element %s" %
+                raise FirewallError(ErrorCode.INVALID_RULE, "Unknown element %s" %
                                     type(rule.element))
 
     def _service(self, enable, policy, service, transaction, included_services=None):

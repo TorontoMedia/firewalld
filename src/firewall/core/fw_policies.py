@@ -24,8 +24,7 @@ __all__ = [ "FirewallPolicies" ]
 from firewall import config
 from firewall.core.logger import log
 from firewall.core.io.lockdown_whitelist import LockdownWhitelist
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 class FirewallPolicies(object):
     def __init__(self):
@@ -67,12 +66,12 @@ class FirewallPolicies(object):
 
     def enable_lockdown(self):
         if self._lockdown:
-            raise FirewallError(errors.ALREADY_ENABLED, "enable_lockdown()")
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, "enable_lockdown()")
         self._lockdown = True
 
     def disable_lockdown(self):
         if not self._lockdown:
-            raise FirewallError(errors.NOT_ENABLED, "disable_lockdown()")
+            raise FirewallError(ErrorCode.NOT_ENABLED, "disable_lockdown()")
         self._lockdown = False
 
     def query_lockdown(self):

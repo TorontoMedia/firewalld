@@ -35,8 +35,7 @@ from firewall.core.io.zone import Zone, zone_reader, zone_writer
 from firewall.core.io.ipset import IPSet, ipset_reader, ipset_writer
 from firewall.core.io.helper import Helper, helper_reader, helper_writer
 from firewall.core.io.policy import Policy, policy_reader, policy_writer
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 class FirewallConfig(object):
     def __init__(self, fw):
@@ -241,16 +240,16 @@ class FirewallConfig(object):
             return self._ipsets[name]
         elif name in self._builtin_ipsets:
             return self._builtin_ipsets[name]
-        raise FirewallError(errors.INVALID_IPSET, name)
+        raise FirewallError(ErrorCode.INVALID_IPSET, name)
 
     def load_ipset_defaults(self, obj):
         if obj.name not in self._ipsets:
-            raise FirewallError(errors.NO_DEFAULTS, obj.name)
+            raise FirewallError(ErrorCode.NO_DEFAULTS, obj.name)
         elif self._ipsets[obj.name] != obj:
-            raise FirewallError(errors.NO_DEFAULTS,
+            raise FirewallError(ErrorCode.NO_DEFAULTS,
                                 "self._ipsets[%s] != obj" % obj.name)
         elif obj.name not in self._builtin_ipsets:
-            raise FirewallError(errors.NO_DEFAULTS,
+            raise FirewallError(ErrorCode.NO_DEFAULTS,
                             "'%s' not a built-in ipset" % obj.name)
         self._remove_ipset(obj)
         return self._builtin_ipsets[obj.name]
@@ -274,7 +273,7 @@ class FirewallConfig(object):
 
     def new_ipset(self, name, conf):
         if name in self._ipsets or name in self._builtin_ipsets:
-            raise FirewallError(errors.NAME_CONFLICT,
+            raise FirewallError(ErrorCode.NAME_CONFLICT,
                                 "new_ipset(): '%s'" % name)
 
         x = IPSet()
@@ -363,9 +362,9 @@ class FirewallConfig(object):
 
     def _remove_ipset(self, obj):
         if obj.name not in self._ipsets:
-            raise FirewallError(errors.INVALID_IPSET, obj.name)
+            raise FirewallError(ErrorCode.INVALID_IPSET, obj.name)
         if obj.path != config.ETC_FIREWALLD_IPSETS:
-            raise FirewallError(errors.INVALID_DIRECTORY,
+            raise FirewallError(ErrorCode.INVALID_DIRECTORY,
                                 "'%s' != '%s'" % (obj.path,
                                                   config.ETC_FIREWALLD_IPSETS))
 
@@ -380,7 +379,7 @@ class FirewallConfig(object):
 
     def check_builtin_ipset(self, obj):
         if obj.builtin or not obj.default:
-            raise FirewallError(errors.BUILTIN_IPSET,
+            raise FirewallError(ErrorCode.BUILTIN_IPSET,
                                 "'%s' is built-in ipset" % obj.name)
 
     def remove_ipset(self, obj):
@@ -413,16 +412,16 @@ class FirewallConfig(object):
             return self._icmptypes[name]
         elif name in self._builtin_icmptypes:
             return self._builtin_icmptypes[name]
-        raise FirewallError(errors.INVALID_ICMPTYPE, name)
+        raise FirewallError(ErrorCode.INVALID_ICMPTYPE, name)
 
     def load_icmptype_defaults(self, obj):
         if obj.name not in self._icmptypes:
-            raise FirewallError(errors.NO_DEFAULTS, obj.name)
+            raise FirewallError(ErrorCode.NO_DEFAULTS, obj.name)
         elif self._icmptypes[obj.name] != obj:
-            raise FirewallError(errors.NO_DEFAULTS,
+            raise FirewallError(ErrorCode.NO_DEFAULTS,
                                 "self._icmptypes[%s] != obj" % obj.name)
         elif obj.name not in self._builtin_icmptypes:
-            raise FirewallError(errors.NO_DEFAULTS,
+            raise FirewallError(ErrorCode.NO_DEFAULTS,
                                 "'%s' not a built-in icmptype" % obj.name)
         self._remove_icmptype(obj)
         return self._builtin_icmptypes[obj.name]
@@ -446,7 +445,7 @@ class FirewallConfig(object):
 
     def new_icmptype(self, name, conf):
         if name in self._icmptypes or name in self._builtin_icmptypes:
-            raise FirewallError(errors.NAME_CONFLICT,
+            raise FirewallError(ErrorCode.NAME_CONFLICT,
                                 "new_icmptype(): '%s'" % name)
 
         x = IcmpType()
@@ -535,9 +534,9 @@ class FirewallConfig(object):
 
     def _remove_icmptype(self, obj):
         if obj.name not in self._icmptypes:
-            raise FirewallError(errors.INVALID_ICMPTYPE, obj.name)
+            raise FirewallError(ErrorCode.INVALID_ICMPTYPE, obj.name)
         if obj.path != config.ETC_FIREWALLD_ICMPTYPES:
-            raise FirewallError(errors.INVALID_DIRECTORY,
+            raise FirewallError(ErrorCode.INVALID_DIRECTORY,
                                 "'%s' != '%s'" % \
                                 (obj.path, config.ETC_FIREWALLD_ICMPTYPES))
 
@@ -552,7 +551,7 @@ class FirewallConfig(object):
 
     def check_builtin_icmptype(self, obj):
         if obj.builtin or not obj.default:
-            raise FirewallError(errors.BUILTIN_ICMPTYPE,
+            raise FirewallError(ErrorCode.BUILTIN_ICMPTYPE,
                                 "'%s' is built-in icmp type" % obj.name)
 
     def remove_icmptype(self, obj):
@@ -585,16 +584,16 @@ class FirewallConfig(object):
             return self._services[name]
         elif name in self._builtin_services:
             return self._builtin_services[name]
-        raise FirewallError(errors.INVALID_SERVICE, "get_service(): '%s'" % name)
+        raise FirewallError(ErrorCode.INVALID_SERVICE, "get_service(): '%s'" % name)
 
     def load_service_defaults(self, obj):
         if obj.name not in self._services:
-            raise FirewallError(errors.NO_DEFAULTS, obj.name)
+            raise FirewallError(ErrorCode.NO_DEFAULTS, obj.name)
         elif self._services[obj.name] != obj:
-            raise FirewallError(errors.NO_DEFAULTS,
+            raise FirewallError(ErrorCode.NO_DEFAULTS,
                                 "self._services[%s] != obj" % obj.name)
         elif obj.name not in self._builtin_services:
-            raise FirewallError(errors.NO_DEFAULTS,
+            raise FirewallError(ErrorCode.NO_DEFAULTS,
                                 "'%s' not a built-in service" % obj.name)
         self._remove_service(obj)
         return self._builtin_services[obj.name]
@@ -637,7 +636,7 @@ class FirewallConfig(object):
 
     def new_service(self, name, conf):
         if name in self._services or name in self._builtin_services:
-            raise FirewallError(errors.NAME_CONFLICT,
+            raise FirewallError(ErrorCode.NAME_CONFLICT,
                                 "new_service(): '%s'" % name)
 
         conf_dict = {}
@@ -648,7 +647,7 @@ class FirewallConfig(object):
 
     def new_service_dict(self, name, conf):
         if name in self._services or name in self._builtin_services:
-            raise FirewallError(errors.NAME_CONFLICT,
+            raise FirewallError(ErrorCode.NAME_CONFLICT,
                                 "new_service(): '%s'" % name)
 
         x = Service()
@@ -737,9 +736,9 @@ class FirewallConfig(object):
 
     def _remove_service(self, obj):
         if obj.name not in self._services:
-            raise FirewallError(errors.INVALID_SERVICE, obj.name)
+            raise FirewallError(ErrorCode.INVALID_SERVICE, obj.name)
         if obj.path != config.ETC_FIREWALLD_SERVICES:
-            raise FirewallError(errors.INVALID_DIRECTORY,
+            raise FirewallError(ErrorCode.INVALID_DIRECTORY,
                                 "'%s' != '%s'" % \
                                 (obj.path, config.ETC_FIREWALLD_SERVICES))
 
@@ -754,7 +753,7 @@ class FirewallConfig(object):
 
     def check_builtin_service(self, obj):
         if obj.builtin or not obj.default:
-            raise FirewallError(errors.BUILTIN_SERVICE,
+            raise FirewallError(ErrorCode.BUILTIN_SERVICE,
                                 "'%s' is built-in service" % obj.name)
 
     def remove_service(self, obj):
@@ -793,16 +792,16 @@ class FirewallConfig(object):
             return self._zones[name]
         elif name in self._builtin_zones:
             return self._builtin_zones[name]
-        raise FirewallError(errors.INVALID_ZONE, "get_zone(): %s" % name)
+        raise FirewallError(ErrorCode.INVALID_ZONE, "get_zone(): %s" % name)
 
     def load_zone_defaults(self, obj):
         if obj.name not in self._zones:
-            raise FirewallError(errors.NO_DEFAULTS, obj.name)
+            raise FirewallError(ErrorCode.NO_DEFAULTS, obj.name)
         elif self._zones[obj.name] != obj:
-            raise FirewallError(errors.NO_DEFAULTS,
+            raise FirewallError(ErrorCode.NO_DEFAULTS,
                                 "self._zones[%s] != obj" % obj.name)
         elif obj.name not in self._builtin_zones:
-            raise FirewallError(errors.NO_DEFAULTS,
+            raise FirewallError(ErrorCode.NO_DEFAULTS,
                                 "'%s' not a built-in zone" % obj.name)
         self._remove_zone(obj)
         return self._builtin_zones[obj.name]
@@ -845,7 +844,7 @@ class FirewallConfig(object):
 
     def new_zone(self, name, conf):
         if name in self._zones or name in self._builtin_zones:
-            raise FirewallError(errors.NAME_CONFLICT, "new_zone(): '%s'" % name)
+            raise FirewallError(ErrorCode.NAME_CONFLICT, "new_zone(): '%s'" % name)
 
         conf_dict = {}
         for i,value in enumerate(conf):
@@ -855,7 +854,7 @@ class FirewallConfig(object):
 
     def new_zone_dict(self, name, conf):
         if name in self._zones or name in self._builtin_zones:
-            raise FirewallError(errors.NAME_CONFLICT, "new_zone(): '%s'" % name)
+            raise FirewallError(ErrorCode.NAME_CONFLICT, "new_zone(): '%s'" % name)
 
         x = Zone()
         x.check_name(name)
@@ -949,9 +948,9 @@ class FirewallConfig(object):
 
     def _remove_zone(self, obj):
         if obj.name not in self._zones:
-            raise FirewallError(errors.INVALID_ZONE, obj.name)
+            raise FirewallError(ErrorCode.INVALID_ZONE, obj.name)
         if not obj.path.startswith(config.ETC_FIREWALLD_ZONES):
-            raise FirewallError(errors.INVALID_DIRECTORY,
+            raise FirewallError(ErrorCode.INVALID_DIRECTORY,
                                 "'%s' doesn't start with '%s'" % \
                                 (obj.path, config.ETC_FIREWALLD_ZONES))
 
@@ -966,7 +965,7 @@ class FirewallConfig(object):
 
     def check_builtin_zone(self, obj):
         if obj.builtin or not obj.default:
-            raise FirewallError(errors.BUILTIN_ZONE,
+            raise FirewallError(ErrorCode.BUILTIN_ZONE,
                                 "'%s' is built-in zone" % obj.name)
 
     def remove_zone(self, obj):
@@ -1002,16 +1001,16 @@ class FirewallConfig(object):
             return self._policy_objects[name]
         elif name in self._builtin_policy_objects:
             return self._builtin_policy_objects[name]
-        raise FirewallError(errors.INVALID_POLICY, "get_policy_object(): %s" % name)
+        raise FirewallError(ErrorCode.INVALID_POLICY, "get_policy_object(): %s" % name)
 
     def load_policy_object_defaults(self, obj):
         if obj.name not in self._policy_objects:
-            raise FirewallError(errors.NO_DEFAULTS, obj.name)
+            raise FirewallError(ErrorCode.NO_DEFAULTS, obj.name)
         elif self._policy_objects[obj.name] != obj:
-            raise FirewallError(errors.NO_DEFAULTS,
+            raise FirewallError(ErrorCode.NO_DEFAULTS,
                                 "self._policy_objects[%s] != obj" % obj.name)
         elif obj.name not in self._builtin_policy_objects:
-            raise FirewallError(errors.NO_DEFAULTS,
+            raise FirewallError(ErrorCode.NO_DEFAULTS,
                                 "'%s' not a built-in policy" % obj.name)
         self._remove_policy_object(obj)
         return self._builtin_policy_objects[obj.name]
@@ -1035,7 +1034,7 @@ class FirewallConfig(object):
 
     def new_policy_object_dict(self, name, conf):
         if name in self._policy_objects or name in self._builtin_policy_objects:
-            raise FirewallError(errors.NAME_CONFLICT, "new_policy_object(): '%s'" % name)
+            raise FirewallError(ErrorCode.NAME_CONFLICT, "new_policy_object(): '%s'" % name)
 
         x = Policy()
         x.check_name(name)
@@ -1129,9 +1128,9 @@ class FirewallConfig(object):
 
     def _remove_policy_object(self, obj):
         if obj.name not in self._policy_objects:
-            raise FirewallError(errors.INVALID_POLICY, obj.name)
+            raise FirewallError(ErrorCode.INVALID_POLICY, obj.name)
         if not obj.path.startswith(config.ETC_FIREWALLD_POLICIES):
-            raise FirewallError(errors.INVALID_DIRECTORY,
+            raise FirewallError(ErrorCode.INVALID_DIRECTORY,
                                 "'%s' doesn't start with '%s'" % \
                                 (obj.path, config.ETC_FIREWALLD_POLICIES))
 
@@ -1146,7 +1145,7 @@ class FirewallConfig(object):
 
     def check_builtin_policy_object(self, obj):
         if obj.builtin or not obj.default:
-            raise FirewallError(errors.BUILTIN_POLICY,
+            raise FirewallError(ErrorCode.BUILTIN_POLICY,
                                 "'%s' is built-in policy" % obj.name)
 
     def remove_policy_object(self, obj):
@@ -1179,16 +1178,16 @@ class FirewallConfig(object):
             return self._helpers[name]
         elif name in self._builtin_helpers:
             return self._builtin_helpers[name]
-        raise FirewallError(errors.INVALID_HELPER, name)
+        raise FirewallError(ErrorCode.INVALID_HELPER, name)
 
     def load_helper_defaults(self, obj):
         if obj.name not in self._helpers:
-            raise FirewallError(errors.NO_DEFAULTS, obj.name)
+            raise FirewallError(ErrorCode.NO_DEFAULTS, obj.name)
         elif self._helpers[obj.name] != obj:
-            raise FirewallError(errors.NO_DEFAULTS,
+            raise FirewallError(ErrorCode.NO_DEFAULTS,
                                 "self._helpers[%s] != obj" % obj.name)
         elif obj.name not in self._builtin_helpers:
-            raise FirewallError(errors.NO_DEFAULTS,
+            raise FirewallError(ErrorCode.NO_DEFAULTS,
                             "'%s' not a built-in helper" % obj.name)
         self._remove_helper(obj)
         return self._builtin_helpers[obj.name]
@@ -1212,7 +1211,7 @@ class FirewallConfig(object):
 
     def new_helper(self, name, conf):
         if name in self._helpers or name in self._builtin_helpers:
-            raise FirewallError(errors.NAME_CONFLICT,
+            raise FirewallError(ErrorCode.NAME_CONFLICT,
                                 "new_helper(): '%s'" % name)
 
         x = Helper()
@@ -1301,9 +1300,9 @@ class FirewallConfig(object):
 
     def _remove_helper(self, obj):
         if obj.name not in self._helpers:
-            raise FirewallError(errors.INVALID_HELPER, obj.name)
+            raise FirewallError(ErrorCode.INVALID_HELPER, obj.name)
         if obj.path != config.ETC_FIREWALLD_HELPERS:
-            raise FirewallError(errors.INVALID_DIRECTORY,
+            raise FirewallError(ErrorCode.INVALID_DIRECTORY,
                                 "'%s' != '%s'" % (obj.path,
                                                   config.ETC_FIREWALLD_HELPERS))
 
@@ -1318,7 +1317,7 @@ class FirewallConfig(object):
 
     def check_builtin_helper(self, obj):
         if obj.builtin or not obj.default:
-            raise FirewallError(errors.BUILTIN_HELPER,
+            raise FirewallError(ErrorCode.BUILTIN_HELPER,
                                 "'%s' is built-in helper" % obj.name)
 
     def remove_helper(self, obj):

@@ -31,8 +31,7 @@ from firewall.core.io.io_object import IO_Object, \
     IO_Object_ContentHandler, IO_Object_XMLGenerator, check_port, \
     check_tcpudp, check_protocol, check_address
 from firewall.core.logger import log
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 class Service(IO_Object):
     IMPORT_EXPORT_STRUCTURE = (
@@ -111,7 +110,7 @@ class Service(IO_Object):
         elif item == "destination":
             for destination in config:
                 if destination not in [ "ipv4", "ipv6" ]:
-                    raise FirewallError(errors.INVALID_DESTINATION,
+                    raise FirewallError(ErrorCode.INVALID_DESTINATION,
                                         "'%s' not in {'ipv4'|'ipv6'}" % \
                                         destination)
                 check_address(destination, config[destination])
@@ -123,12 +122,12 @@ class Service(IO_Object):
                     if "_" in module:
                         module = module.replace("_", "-")
                 if len(module) < 2:
-                    raise FirewallError(errors.INVALID_MODULE, module)
+                    raise FirewallError(ErrorCode.INVALID_MODULE, module)
 
         elif item == "includes":
             for include in config:
                 if include not in all_io_objects["services"]:
-                    raise FirewallError(errors.INVALID_SERVICE,
+                    raise FirewallError(ErrorCode.INVALID_SERVICE,
                             "Service '{}': Included service '{}' not found.".format(
                                 self.name, include))
 
@@ -218,7 +217,7 @@ class service_ContentHandler(IO_Object_ContentHandler):
 def service_reader(filename, path):
     service = Service()
     if not filename.endswith(".xml"):
-        raise FirewallError(errors.INVALID_NAME,
+        raise FirewallError(ErrorCode.INVALID_NAME,
                             "'%s' is missing .xml suffix" % filename)
     service.name = filename[:-4]
     service.check_name(service.name)
@@ -236,7 +235,7 @@ def service_reader(filename, path):
         try:
             parser.parse(source)
         except sax.SAXParseException as msg:
-            raise FirewallError(errors.INVALID_SERVICE,
+            raise FirewallError(ErrorCode.INVALID_SERVICE,
                                 "not a valid service file: %s" % \
                                 msg.getException())
     del handler

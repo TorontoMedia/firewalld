@@ -58,8 +58,7 @@ from firewall.core import rich
 from firewall.core.fw_nm import nm_is_imported, nm_get_dbus_interface, \
                                 nm_get_connections, nm_get_zone_of_connection, \
                                 nm_set_zone_of_connection
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 import gettext
 gettext.textdomain(config.DOMAIN)
@@ -4193,7 +4192,7 @@ class FirewallConfig(object):
                     else:
                         msg = str(msg)
                     code = FirewallError.get_code(msg)
-                    if code == errors.NOT_APPLIED:
+                    if code == ErrorCode.NOT_APPLIED:
                         continue
                     raise
                 self.activate_exception_handler()
@@ -6228,7 +6227,7 @@ class FirewallConfig(object):
                 else:
                     msg = str(msg)
                 code = FirewallError.get_code(msg)
-                if code == errors.NOT_APPLIED:
+                if code == ErrorCode.NOT_APPLIED:
                     self.ipsetConfNotebook.set_sensitive(False)
                     return
                 raise

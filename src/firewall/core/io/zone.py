@@ -34,8 +34,7 @@ from firewall.core.io.io_object import IO_Object, \
 from firewall.core.io.policy import common_startElement, common_endElement, common_check_config, common_writer
 from firewall.core import rich
 from firewall.core.logger import log
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 class Zone(IO_Object):
     """ Zone class """
@@ -104,7 +103,7 @@ class Zone(IO_Object):
         for i, (el, dummy) in enumerate(Zone.IMPORT_EXPORT_STRUCTURE):
             if el == element:
                 return i
-        raise FirewallError(errors.UNKNOWN_ERROR, "index_of()")
+        raise FirewallError(ErrorCode.UNKNOWN_ERROR, "index_of()")
 
     def __init__(self):
         super(Zone, self).__init__()
@@ -168,35 +167,35 @@ class Zone(IO_Object):
         common_check_config(self, config, item, all_config, all_io_objects)
 
         if self.name in all_io_objects["policies"]:
-            raise FirewallError(errors.NAME_CONFLICT, "Zone '{}': Can't have the same name as a policy.".format(self.name))
+            raise FirewallError(ErrorCode.NAME_CONFLICT, "Zone '{}': Can't have the same name as a policy.".format(self.name))
 
         if item == "target":
             if config not in ZONE_TARGETS:
-                raise FirewallError(errors.INVALID_TARGET, "Zone '{}': invalid target '{}'".format(
+                raise FirewallError(ErrorCode.INVALID_TARGET, "Zone '{}': invalid target '{}'".format(
                     self.name, config))
         elif item == "interfaces":
             for interface in config:
                 if not checkInterface(interface):
-                    raise FirewallError(errors.INVALID_INTERFACE, "Zone '{}': invalid interface '{}'".format(
+                    raise FirewallError(ErrorCode.INVALID_INTERFACE, "Zone '{}': invalid interface '{}'".format(
                         self.name, interface))
                 for zone in all_io_objects["zones"]:
                     if zone == self.name:
                         continue
                     if interface in all_io_objects["zones"][zone].interfaces:
-                        raise FirewallError(errors.INVALID_INTERFACE,
+                        raise FirewallError(ErrorCode.INVALID_INTERFACE,
                                 "Zone '{}': interface '{}' already bound to zone '{}'".format(
                                     self.name, interface, zone))
         elif item == "sources":
             for source in config:
                 if not checkIPnMask(source) and not checkIP6nMask(source) and \
                    not check_mac(source) and not source.startswith("ipset:"):
-                    raise FirewallError(errors.INVALID_ADDR, "Zone '{}': invalid source '{}'".format(
+                    raise FirewallError(ErrorCode.INVALID_ADDR, "Zone '{}': invalid source '{}'".format(
                         self.name, source))
                 for zone in all_io_objects["zones"]:
                     if zone == self.name:
                         continue
                     if source in all_io_objects["zones"][zone].sources:
-                        raise FirewallError(errors.INVALID_ADDR,
+                        raise FirewallError(ErrorCode.INVALID_ADDR,
                                 "Zone '{}': source '{}' already bound to zone '{}'".format(
                                     self.name, source, zone))
 
@@ -204,13 +203,13 @@ class Zone(IO_Object):
     def check_name(self, name):
         super(Zone, self).check_name(name)
         if name.startswith('/'):
-            raise FirewallError(errors.INVALID_NAME,
+            raise FirewallError(ErrorCode.INVALID_NAME,
                                 "Zone '{}': name can't start with '/'".format(name))
         elif name.endswith('/'):
-            raise FirewallError(errors.INVALID_NAME,
+            raise FirewallError(ErrorCode.INVALID_NAME,
                                 "Zone '{}': name can't end with '/'".format(name))
         elif name.count('/') > 1:
-            raise FirewallError(errors.INVALID_NAME,
+            raise FirewallError(ErrorCode.INVALID_NAME,
                                 "Zone '{}': name has more than one '/'".format(name))
         else:
             if "/" in name:
@@ -218,7 +217,7 @@ class Zone(IO_Object):
             else:
                 checked_name = name
             if len(checked_name) > max_zone_name_len():
-                raise FirewallError(errors.INVALID_NAME,
+                raise FirewallError(ErrorCode.INVALID_NAME,
                                     "Zone '{}': name has {} chars, max is {}".format(
                                         name, len(checked_name), max_zone_name_len()))
 
@@ -294,7 +293,7 @@ class zone_ContentHandler(IO_Object_ContentHandler):
             if "target" in attrs:
                 target = attrs["target"]
                 if target not in ZONE_TARGETS:
-                    raise FirewallError(errors.INVALID_TARGET, target)
+                    raise FirewallError(ErrorCode.INVALID_TARGET, target)
                 if target != "" and target != DEFAULT_ZONE_TARGET:
                     self.item.target = target
 
@@ -358,7 +357,7 @@ class zone_ContentHandler(IO_Object_ContentHandler):
                 if not checkIPnMask(attrs["address"]) and \
                    not checkIP6nMask(attrs["address"]) and \
                    not check_mac(attrs["address"]):
-                    raise FirewallError(errors.INVALID_ADDR, attrs["address"])
+                    raise FirewallError(ErrorCode.INVALID_ADDR, attrs["address"])
             if "ipset" in attrs:
                 entry = "ipset:%s" % attrs["ipset"]
                 if entry not in self.item.sources:
@@ -392,7 +391,7 @@ class zone_ContentHandler(IO_Object_ContentHandler):
 def zone_reader(filename, path, no_check_name=False):
     zone = Zone()
     if not filename.endswith(".xml"):
-        raise FirewallError(errors.INVALID_NAME,
+        raise FirewallError(ErrorCode.INVALID_NAME,
                             "'%s' is missing .xml suffix" % filename)
     zone.name = filename[:-4]
     if not no_check_name:
@@ -415,7 +414,7 @@ def zone_reader(filename, path, no_check_name=False):
         try:
             parser.parse(source)
         except sax.SAXParseException as msg:
-            raise FirewallError(errors.INVALID_ZONE,
+            raise FirewallError(ErrorCode.INVALID_ZONE,
                                 "not a valid zone file: %s" % \
                                 msg.getException())
     del handler

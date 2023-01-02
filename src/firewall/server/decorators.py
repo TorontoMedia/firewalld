@@ -29,8 +29,7 @@ import functools
 import inspect
 from dbus.exceptions import DBusException
 
-from firewall.errors import FirewallError
-from firewall import errors
+from firewall.errors import ErrorCode, FirewallError
 from firewall.core.logger import log
 from firewall.server.dbus import FirewallDBusException, NotAuthorizedException
 from firewall.dbus_utils import uid_of_sender
@@ -67,8 +66,8 @@ def dbus_handle_exceptions(func):
             return func(*args, **kwargs)
         except FirewallError as error:
             code = FirewallError.get_code(str(error))
-            if code in [ errors.ALREADY_ENABLED, errors.NOT_ENABLED,
-                         errors.ZONE_ALREADY_SET, errors.ALREADY_SET ]:
+            if code in [ ErrorCode.ALREADY_ENABLED, ErrorCode.NOT_ENABLED,
+                         ErrorCode.ZONE_ALREADY_SET, ErrorCode.ALREADY_SET ]:
                 log.warning(str(error))
             else:
                 log.debug1(traceback.format_exc())

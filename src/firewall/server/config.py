@@ -48,8 +48,7 @@ from firewall.dbus_utils import dbus_to_python, \
     dbus_introspection_prepare_properties, \
     dbus_introspection_add_properties, \
     dbus_introspection_add_deprecated
-from firewall import errors
-from firewall.errors import FirewallError
+from firewall.errors import ErrorCode, FirewallError
 
 ############################################################################
 #
@@ -529,7 +528,7 @@ class FirewallDConfig(DbusServiceObject):
     @dbus_handle_exceptions
     def accessCheck(self, sender):
         if self.config._fw._state == "FAILED":
-            raise FirewallError(errors.RUNNING_BUT_FAILED,
+            raise FirewallError(ErrorCode.RUNNING_BUT_FAILED,
                     "Changing permanent configuration is not allowed while "
                     "firewalld is in FAILED state. The permanent "
                     "configuration must be fixed and then firewalld "
@@ -552,7 +551,7 @@ class FirewallDConfig(DbusServiceObject):
             command = command_of_sender(bus, sender)
             if self.config.access_check("command", command):
                 return
-            raise FirewallError(errors.ACCESS_DENIED, "lockdown is enabled")
+            raise FirewallError(ErrorCode.ACCESS_DENIED, "lockdown is enabled")
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -729,17 +728,17 @@ class FirewallDConfig(DbusServiceObject):
                                       "RFC3964_IPv4"]:
                     if new_value.lower() not in [ "yes", "no",
                                                   "true", "false" ]:
-                        raise FirewallError(errors.INVALID_VALUE,
+                        raise FirewallError(ErrorCode.INVALID_VALUE,
                                             "'%s' for %s" % \
                                             (new_value, property_name))
                 elif property_name == "LogDenied":
                     if new_value not in config.LOG_DENIED_VALUES:
-                        raise FirewallError(errors.INVALID_VALUE,
+                        raise FirewallError(ErrorCode.INVALID_VALUE,
                                             "'%s' for %s" % \
                                             (new_value, property_name))
                 elif property_name == "FirewallBackend":
                     if new_value not in config.FIREWALL_BACKEND_VALUES:
-                        raise FirewallError(errors.INVALID_VALUE,
+                        raise FirewallError(ErrorCode.INVALID_VALUE,
                                             "'%s' for %s" % \
                                             (new_value, property_name))
                 else:
@@ -833,7 +832,7 @@ class FirewallDConfig(DbusServiceObject):
         self.accessCheck(sender)
         settings = list(self.getLockdownWhitelist())
         if command in settings[0]:
-            raise FirewallError(errors.ALREADY_ENABLED, command)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, command)
         settings[0].append(command)
         self.setLockdownWhitelist(settings)
 
@@ -847,7 +846,7 @@ class FirewallDConfig(DbusServiceObject):
         self.accessCheck(sender)
         settings = list(self.getLockdownWhitelist())
         if command not in settings[0]:
-            raise FirewallError(errors.NOT_ENABLED, command)
+            raise FirewallError(ErrorCode.NOT_ENABLED, command)
         settings[0].remove(command)
         self.setLockdownWhitelist(settings)
 
@@ -878,7 +877,7 @@ class FirewallDConfig(DbusServiceObject):
         self.accessCheck(sender)
         settings = list(self.getLockdownWhitelist())
         if context in settings[1]:
-            raise FirewallError(errors.ALREADY_ENABLED, context)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, context)
         settings[1].append(context)
         self.setLockdownWhitelist(settings)
 
@@ -892,7 +891,7 @@ class FirewallDConfig(DbusServiceObject):
         self.accessCheck(sender)
         settings = list(self.getLockdownWhitelist())
         if context not in settings[1]:
-            raise FirewallError(errors.NOT_ENABLED, context)
+            raise FirewallError(ErrorCode.NOT_ENABLED, context)
         settings[1].remove(context)
         self.setLockdownWhitelist(settings)
 
@@ -923,7 +922,7 @@ class FirewallDConfig(DbusServiceObject):
         self.accessCheck(sender)
         settings = list(self.getLockdownWhitelist())
         if user in settings[2]:
-            raise FirewallError(errors.ALREADY_ENABLED, user)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, user)
         settings[2].append(user)
         self.setLockdownWhitelist(settings)
 
@@ -936,7 +935,7 @@ class FirewallDConfig(DbusServiceObject):
         self.accessCheck(sender)
         settings = list(self.getLockdownWhitelist())
         if user not in settings[2]:
-            raise FirewallError(errors.NOT_ENABLED, user)
+            raise FirewallError(ErrorCode.NOT_ENABLED, user)
         settings[2].remove(user)
         self.setLockdownWhitelist(settings)
 
@@ -966,7 +965,7 @@ class FirewallDConfig(DbusServiceObject):
         self.accessCheck(sender)
         settings = list(self.getLockdownWhitelist())
         if uid in settings[3]:
-            raise FirewallError(errors.ALREADY_ENABLED, uid)
+            raise FirewallError(ErrorCode.ALREADY_ENABLED, uid)
         settings[3].append(uid)
         self.setLockdownWhitelist(settings)
 
@@ -979,7 +978,7 @@ class FirewallDConfig(DbusServiceObject):
         self.accessCheck(sender)
         settings = list(self.getLockdownWhitelist())
         if uid not in settings[3]:
-            raise FirewallError(errors.NOT_ENABLED, uid)
+            raise FirewallError(ErrorCode.NOT_ENABLED, uid)
         settings[3].remove(uid)
         self.setLockdownWhitelist(settings)
 
@@ -1032,7 +1031,7 @@ class FirewallDConfig(DbusServiceObject):
         for obj in self.ipsets:
             if obj.obj.name == ipset:
                 return obj
-        raise FirewallError(errors.INVALID_IPSET, ipset)
+        raise FirewallError(ErrorCode.INVALID_IPSET, ipset)
 
     @dbus_service_method(config.dbus.DBUS_INTERFACE_CONFIG,
                          in_signature='s'+IPSet.DBUS_SIGNATURE,
@@ -1087,7 +1086,7 @@ class FirewallDConfig(DbusServiceObject):
         for obj in self.icmptypes:
             if obj.obj.name == icmptype:
                 return obj
-        raise FirewallError(errors.INVALID_ICMPTYPE, icmptype)
+        raise FirewallError(ErrorCode.INVALID_ICMPTYPE, icmptype)
 
     @dbus_service_method(config.dbus.DBUS_INTERFACE_CONFIG,
                          in_signature='s'+IcmpType.DBUS_SIGNATURE,
@@ -1141,7 +1140,7 @@ class FirewallDConfig(DbusServiceObject):
         for obj in self.services:
             if obj.obj.name == service:
                 return obj
-        raise FirewallError(errors.INVALID_SERVICE, service)
+        raise FirewallError(ErrorCode.INVALID_SERVICE, service)
 
     @dbus_service_method(config.dbus.DBUS_INTERFACE_CONFIG,
                          in_signature='s(sssa(ss)asa{ss}asa(ss))',
@@ -1210,7 +1209,7 @@ class FirewallDConfig(DbusServiceObject):
         for obj in self.zones:
             if obj.obj.name == zone:
                 return obj
-        raise FirewallError(errors.INVALID_ZONE, zone)
+        raise FirewallError(ErrorCode.INVALID_ZONE, zone)
 
     @dbus_service_method(config.dbus.DBUS_INTERFACE_CONFIG, in_signature='s',
                          out_signature='s')
@@ -1326,7 +1325,7 @@ class FirewallDConfig(DbusServiceObject):
         for obj in self.policy_objects:
             if obj.obj.name == policy:
                 return obj
-        raise FirewallError(errors.INVALID_POLICY, policy)
+        raise FirewallError(ErrorCode.INVALID_POLICY, policy)
 
     @dbus_service_method(config.dbus.DBUS_INTERFACE_CONFIG,
                          in_signature="sa{sv}",
@@ -1382,7 +1381,7 @@ class FirewallDConfig(DbusServiceObject):
         for obj in self.helpers:
             if obj.obj.name == helper:
                 return obj
-        raise FirewallError(errors.INVALID_HELPER, helper)
+        raise FirewallError(ErrorCode.INVALID_HELPER, helper)
 
     @dbus_service_method(config.dbus.DBUS_INTERFACE_CONFIG,
                          in_signature='s'+Helper.DBUS_SIGNATURE,
@@ -1451,7 +1450,7 @@ class FirewallDConfig(DbusServiceObject):
         idx = tuple((ipv, table, chain))
         settings = list(self.getSettings())
         if idx in settings[0]:
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "chain '%s' already is in '%s:%s'" % \
                                 (chain, ipv, table))
         settings[0].append(idx)
@@ -1471,7 +1470,7 @@ class FirewallDConfig(DbusServiceObject):
         idx = tuple((ipv, table, chain))
         settings = list(self.getSettings())
         if idx not in settings[0]:
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "chain '%s' is not in '%s:%s'" % (chain, ipv,
                                                                   table))
         settings[0].remove(idx)
@@ -1530,7 +1529,7 @@ class FirewallDConfig(DbusServiceObject):
         idx = (ipv, table, chain, priority, args)
         settings = list(self.getSettings())
         if idx in settings[1]:
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "rule '%s' already is in '%s:%s:%s'" % \
                                 (args, ipv, table, chain))
         settings[1].append(idx)
@@ -1552,7 +1551,7 @@ class FirewallDConfig(DbusServiceObject):
         idx = (ipv, table, chain, priority, args)
         settings = list(self.getSettings())
         if idx not in settings[1]:
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "rule '%s' is not in '%s:%s:%s'" % \
                                 (args, ipv, table, chain))
         settings[1].remove(idx)
@@ -1629,7 +1628,7 @@ class FirewallDConfig(DbusServiceObject):
         idx = (ipv, args)
         settings = list(self.getSettings())
         if idx in settings[2]:
-            raise FirewallError(errors.ALREADY_ENABLED,
+            raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 "passthrough '%s', '%s'" % (ipv, args))
         settings[2].append(idx)
         self.update(settings)
@@ -1648,7 +1647,7 @@ class FirewallDConfig(DbusServiceObject):
         idx = (ipv, args)
         settings = list(self.getSettings())
         if idx not in settings[2]:
-            raise FirewallError(errors.NOT_ENABLED,
+            raise FirewallError(ErrorCode.NOT_ENABLED,
                                 "passthrough '%s', '%s'" % (ipv, args))
         settings[2].remove(idx)
         self.update(settings)
