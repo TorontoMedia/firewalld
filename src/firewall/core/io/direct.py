@@ -109,6 +109,7 @@ class direct_ContentHandler(IO_Object_ContentHandler):
                           "ignoring.")
             self._passthrough = None
 
+
 class Direct(IO_Object):
     """ Direct class """
 

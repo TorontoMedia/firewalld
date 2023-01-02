@@ -50,12 +50,14 @@ for p in os.getenv("PATH").split(":"):
     if p not in PATH:
         PATH.append(p)
 
+
 def search_app(app):
     for p in PATH:
         _app = "%s/%s" % (p, app)
         if os.path.exists(_app):
             return _app
     return None
+
 
 NM_CONNECTION_EDITOR = ""
 for binary in [ "/usr/bin/nm-connection-editor",
@@ -68,11 +70,13 @@ for binary in [ "/usr/bin/nm-connection-editor",
         NM_CONNECTION_EDITOR = binary
         break
 
+
 def escape(text):
     text = text.replace('&', '&amp;')
     text = text.replace('>', '&gt;')
     text = text.replace('<', '&lt;')
     return text
+
 
 # ZoneInterfaceEditor #########################################################
 
@@ -147,6 +151,7 @@ class ZoneInterfaceEditor(QtWidgets.QDialog):
         self.fw.changeZoneOfInterface(self.get_zone(), self.interface)
         self.hide()
 
+
 # ZoneConnectionEditor ########################################################
 
 class ZoneConnectionEditor(ZoneInterfaceEditor):
@@ -172,6 +177,7 @@ class ZoneConnectionEditor(ZoneInterfaceEditor):
                                           connection_name=self.connection_name)))
         self.hide()
 
+
 # ZoneSourceEditor ############################################################
 
 class ZoneSourceEditor(ZoneInterfaceEditor):
@@ -187,6 +193,7 @@ class ZoneSourceEditor(ZoneInterfaceEditor):
     def ok(self):
         self.fw.changeZoneOfSource(self.get_zone(), self.source)
         self.hide()
+
 
 # ShieldsEditor #########################################################
 
@@ -323,6 +330,7 @@ class ShieldsEditor(QtWidgets.QDialog):
         self.settings.sync()
         self.hide()
 
+
 # AboutDialog #################################################################
 
 class AboutDialog(QtWidgets.QDialog):
@@ -399,6 +407,7 @@ class AboutDialog(QtWidgets.QDialog):
         vbox.addWidget(buttonBox)
 
         self.setLayout(vbox)
+
 
 # TrayApplet ##################################################################
 
@@ -1100,6 +1109,7 @@ class TrayApplet(QtWidgets.QSystemTrayIcon):
         if self.notificationsAction.isChecked():
             self.notify(escape(_("Zone '%s' activated for source '%s'") % \
                                (zone, source)))
+
 
 # MAIN ########################################################################
 

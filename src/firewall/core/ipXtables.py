@@ -53,6 +53,7 @@ ICMP = {
     "ipv6": "ipv6-icmp",
 }
 
+
 # ipv ebtables also uses this
 #
 def common_reverse_rule(args):
@@ -91,6 +92,7 @@ def common_reverse_rule(args):
 
         ret_args[idx] = replace_args[arg]
     return ret_args
+
 
 def common_reverse_passthrough(args):
     """ Reverse valid passthough rule """
@@ -132,6 +134,7 @@ def common_reverse_passthrough(args):
     raise FirewallError(ErrorCode.INVALID_PASSTHROUGH,
                         "no '-A', '-I' or '-N' arg")
 
+
 # ipv ebtables also uses this
 #
 def common_check_passthrough(args):
@@ -165,6 +168,7 @@ def common_check_passthrough(args):
     if len(args & needed) == 0:
         raise FirewallError(ErrorCode.INVALID_PASSTHROUGH,
                             "no '-A', '-I' or '-N' arg")
+
 
 class ip4tables:
     ipv = "ipv4"
@@ -1442,6 +1446,7 @@ class ip4tables:
 
     def is_ipv_supported(self, ipv):
         return ipv == self.ipv
+
 
 class ip6tables(ip4tables):
     ipv = "ipv6"

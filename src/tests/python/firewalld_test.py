@@ -33,6 +33,7 @@ from firewall.config.dbus import DBUS_PATH, DBUS_PATH_CONFIG, DBUS_INTERFACE, \
 from firewall.dbus_utils import dbus_to_python
 from pprint import pprint
 
+
 class TestFirewallD(unittest.TestCase):
     """
     For testing of temporary changes, ie. those that disappear with restart:
@@ -312,6 +313,7 @@ class TestFirewallD(unittest.TestCase):
         self.assertTrue(self.fw_zone.queryInterface(zone, interface))
 
         self.fw_zone.removeInterface(zone, interface) #cleanup
+
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestFirewallD)

@@ -45,6 +45,7 @@ from firewall.core.io.icmptype import icmptype_reader
 from firewall.core.io.helper import helper_reader
 from firewall.command import FirewallCommand
 
+
 def __usage():
     sys.stdout.write("""
 Usage: firewall-cmd [OPTIONS...]
@@ -501,6 +502,7 @@ Panic Options
 
 """)
 
+
 def try_set_zone_of_interface(_zone, interface):
     if nm_is_imported():
         try:
@@ -522,6 +524,7 @@ def try_set_zone_of_interface(_zone, interface):
                 return True
     return False
 
+
 def try_get_zone_of_interface(interface):
     if nm_is_imported():
         try:
@@ -533,6 +536,7 @@ def try_get_zone_of_interface(interface):
                 return nm_get_zone_of_connection(connection)
     return False
 
+
 def try_nm_get_interfaces_in_zone(zone):
     if nm_is_imported():
         try:
@@ -540,6 +544,7 @@ def try_nm_get_interfaces_in_zone(zone):
         except Exception:
             pass
     return []
+
 
 parser = argparse.ArgumentParser(usage="'firewall-cmd --help' for usage information or see firewall-cmd(1) man page",
                                  add_help=False)
@@ -1016,8 +1021,11 @@ options_list_get = a.help or a.version or a.list_all or a.list_all_zones or \
 
 cmd = FirewallCommand(a.quiet, a.verbose)
 
+
 def myexcepthook(exctype, value, traceback):
     cmd.exception_handler(str(value))
+
+
 sys.excepthook = myexcepthook
 
 # Check various impossible combinations of options

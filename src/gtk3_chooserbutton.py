@@ -25,6 +25,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+
 class ChooserButton:
     def __init__(self, button, default_label=""):
         self.button = button

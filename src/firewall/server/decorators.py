@@ -34,6 +34,7 @@ from firewall.core.logger import log
 from firewall.server.dbus import FirewallDBusException, NotAuthorizedException
 from firewall.dbus_utils import uid_of_sender
 
+
 ############################################################################
 #
 # Exception handler decorators
@@ -54,6 +55,7 @@ def handle_exceptions(func):
         except Exception:  # pylint: disable=W0703
             log.exception()
     return _impl
+
 
 def dbus_handle_exceptions(func):
     """Decorator to handle exceptions, log and report them into D-Bus
@@ -92,10 +94,12 @@ def dbus_handle_exceptions(func):
     _impl.__signature__ = inspect.signature(func)
     return _impl
 
+
 def dbus_service_method(*args, **kwargs):
     """Add sender argument for D-Bus"""
     kwargs.setdefault("sender_keyword", "sender")
     return dbus.service.method(*args, **kwargs)
+
 
 class dbus_service_method_deprecated:
     """Decorator that maintains a list of deprecated methods in dbus
@@ -118,11 +122,13 @@ class dbus_service_method_deprecated:
             return func(*args, **kwargs)
         return _impl
 
+
 class dbus_service_signal_deprecated(dbus_service_method_deprecated):
     """Decorator that maintains a list of deprecated signals in dbus
     interfaces.
     """
     pass
+
 
 class dbus_polkit_require_auth:
     """Decorator factory that checks if the interface/method can be used by the

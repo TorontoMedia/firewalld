@@ -60,6 +60,7 @@ from firewall.core.io.functions import check_on_disk_config
 from firewall.core.rich import Rich_Rule
 from firewall.errors import ErrorCode, FirewallError
 
+
 ############################################################################
 #
 # class Firewall

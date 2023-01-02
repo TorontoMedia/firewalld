@@ -31,6 +31,7 @@ from firewall.core.ipset import check_ipset_name
 from firewall.core.base import REJECT_TYPES
 from firewall.errors import ErrorCode, FirewallError
 
+
 class Rich_Source:
     def __init__(self, addr, mac, ipset, invert=False):
         self.addr = addr
@@ -60,6 +61,7 @@ class Rich_Source:
         raise FirewallError(ErrorCode.INVALID_RULE,
                             "no address, mac and ipset")
 
+
 class Rich_Destination:
     def __init__(self, addr, ipset, invert=False):
         self.addr = addr
@@ -82,12 +84,14 @@ class Rich_Destination:
         raise FirewallError(ErrorCode.INVALID_RULE,
                             "no address and ipset")
 
+
 class Rich_Service:
     def __init__(self, name):
         self.name = name
 
     def __str__(self):
         return 'service name="%s"' % (self.name)
+
 
 class Rich_Port:
     def __init__(self, port, protocol):
@@ -97,10 +101,12 @@ class Rich_Port:
     def __str__(self):
         return 'port port="%s" protocol="%s"' % (self.port, self.protocol)
 
+
 class Rich_SourcePort(Rich_Port):
     def __str__(self):
         return 'source-port port="%s" protocol="%s"' % (self.port,
                                                         self.protocol)
+
 
 class Rich_Protocol:
     def __init__(self, value):
@@ -109,12 +115,14 @@ class Rich_Protocol:
     def __str__(self):
         return 'protocol value="%s"' % (self.value)
 
+
 class Rich_Masquerade:
     def __init__(self):
         pass
 
     def __str__(self):
         return 'masquerade'
+
 
 class Rich_IcmpBlock:
     def __init__(self, name):
@@ -123,6 +131,7 @@ class Rich_IcmpBlock:
     def __str__(self):
         return 'icmp-block name="%s"' % (self.name)
 
+
 class Rich_IcmpType:
     def __init__(self, name):
         self.name = name
@@ -130,12 +139,14 @@ class Rich_IcmpType:
     def __str__(self):
         return 'icmp-type name="%s"' % (self.name)
 
+
 class Rich_Tcp_Mss_Clamp:
     def __init__(self, value):
         self.value = value
 
     def __str__(self):
         return 'tcp-mss-clamp value="%s"' % (self.value)
+
 
 class Rich_ForwardPort:
     def __init__(self, port, protocol, to_port, to_address):
@@ -154,6 +165,7 @@ class Rich_ForwardPort:
             (self.port, self.protocol,
              ' to-port="%s"' % self.to_port if self.to_port != "" else '',
              ' to-addr="%s"' % self.to_address if self.to_address != "" else '')
+
 
 class Rich_Log:
     def __init__(self, prefix=None, level=None, limit=None):
@@ -179,6 +191,7 @@ class Rich_Log:
 
         if self.limit is not None:
             self.limit.check()
+
 
 class Rich_NFLog:
     def __init__(self, group=None, prefix=None, queue_size=None, limit=None):
@@ -207,6 +220,7 @@ class Rich_NFLog:
         if self.limit is not None:
             self.limit.check()
 
+
 class Rich_Audit:
     def __init__(self, limit=None):
         #TODO check default level in iptables
@@ -215,12 +229,14 @@ class Rich_Audit:
     def __str__(self):
         return 'audit%s' % (" %s" % self.limit if self.limit else "")
 
+
 class Rich_Accept:
     def __init__(self, limit=None):
         self.limit = limit
 
     def __str__(self):
         return "accept%s" % (" %s" % self.limit if self.limit else "")
+
 
 class Rich_Reject:
     def __init__(self, _type=None, limit=None):
@@ -239,6 +255,7 @@ class Rich_Reject:
                self.type not in REJECT_TYPES[family]:
                 valid_types = ", ".join(REJECT_TYPES[family])
                 raise FirewallError(ErrorCode.INVALID_RULE, "Wrong reject type %s.\nUse one of: %s." % (self.type, valid_types))
+
 
 class Rich_Drop(Rich_Accept):
     def __str__(self):
@@ -272,6 +289,7 @@ class Rich_Mark:
             if not functions.checkUINT32(x):
                 # value is uint32
                 raise FirewallError(ErrorCode.INVALID_MARK, x)
+
 
 class Rich_Limit:
     def __init__(self, value):
@@ -321,6 +339,7 @@ class Rich_Limit:
 
     def command(self):
         return ''
+
 
 class Rich_Rule:
     priority_min = -32768

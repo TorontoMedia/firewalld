@@ -33,6 +33,7 @@ from firewall import config
 from firewall.functions import firewalld_is_active
 from firewall.core.logger import log, FileLog
 
+
 def parse_cmdline():
     parser = argparse.ArgumentParser()
     parser.add_argument('--debug',
@@ -71,6 +72,7 @@ def parse_cmdline():
                         help="""Path to firewalld log file""",
                         metavar="path")
     return parser.parse_args()
+
 
 def setup_logging(args):
     # Set up logging capabilities
@@ -136,6 +138,7 @@ def setup_logging(args):
             if args.debug:
                 log.addInfoLogging("*", log_file)
                 log.addDebugLogging("*", log_file)
+
 
 def startup(args):
     try:
@@ -228,6 +231,7 @@ def startup(args):
             os.remove(config.FIREWALLD_PIDFILE)
         sys.exit(1)
 
+
 def main():
     # firewalld should only be run as the root user
     if os.getuid() != 0:
@@ -251,6 +255,7 @@ def main():
     startup(args)
 
     sys.exit(0)
+
 
 if __name__ == '__main__':
     main()

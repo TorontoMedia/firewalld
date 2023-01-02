@@ -39,6 +39,7 @@ from firewall import config
 from firewall.core.logger import log
 from firewall.server.firewalld import FirewallD
 
+
 ############################################################################
 #
 # signal handlers
@@ -49,8 +50,10 @@ def sighup(service):
     service.reload()
     return True
 
+
 def sigterm(mainloop):
     mainloop.quit()
+
 
 ############################################################################
 #

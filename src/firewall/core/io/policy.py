@@ -374,6 +374,7 @@ def common_startElement(obj, name, attrs):
 
     return True
 
+
 def common_endElement(obj, name):
     if name == "rule":
         if not obj._rule_error:
@@ -392,6 +393,7 @@ def common_endElement(obj, name):
         obj._rule_error = False
     elif name in [ "accept", "reject", "drop", "mark", "log", "audit" ]:
         obj._limit_ok = None
+
 
 def common_check_config(obj, config, item, all_config, all_io_objects):
     obj_type = "Policy" if isinstance(obj, Policy) else "Zone"
@@ -468,6 +470,7 @@ def common_check_config(obj, config, item, all_config, all_io_objects):
                             log.debug1("{} (unsupported)".format(ex))
                         else:
                             raise ex
+
 
 def common_writer(obj, handler):
     # short
@@ -973,6 +976,7 @@ class Policy(IO_Object):
                                     "Policy '{}': name has {} chars, max is {}".format(
                                         name, len(checked_name), max_policy_name_len()))
 
+
 # PARSER
 
 class policy_ContentHandler(IO_Object_ContentHandler):
@@ -1051,6 +1055,7 @@ class policy_ContentHandler(IO_Object_ContentHandler):
 
         common_endElement(self, name)
 
+
 def policy_reader(filename, path, no_check_name=False):
     policy = Policy()
     if not filename.endswith(".xml"):
@@ -1079,6 +1084,7 @@ def policy_reader(filename, path, no_check_name=False):
     del handler
     del parser
     return policy
+
 
 def policy_writer(policy, path=None):
     _path = path if path else policy.path

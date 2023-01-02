@@ -32,6 +32,7 @@ import fcntl
 import os.path
 import os
 
+
 # ---------------------------------------------------------------------------
 
 # abstract class for logging targets
@@ -48,6 +49,7 @@ class LogTarget:
 
     def close(self):
         raise NotImplementedError("LogTarget.close is an abstract method")
+
 
 # ---------------------------------------------------------------------------
 
@@ -68,6 +70,7 @@ class _StdoutLog(LogTarget):
     def flush(self):
         self.fd.flush()
 
+
 # ---------------------------------------------------------------------------
 
 # private class for stderr
@@ -75,6 +78,7 @@ class _StderrLog(_StdoutLog):
     def __init__(self):
         _StdoutLog.__init__(self)
         self.fd = sys.stderr
+
 
 # ---------------------------------------------------------------------------
 
@@ -122,6 +126,7 @@ class _SyslogLog(LogTarget):
     def flush(self):
         pass
 
+
 # ---------------------------------------------------------------------------
 
 class FileLog(LogTarget):
@@ -161,6 +166,7 @@ class FileLog(LogTarget):
         if not self.fd:
             return
         self.fd.flush()
+
 
 # ---------------------------------------------------------------------------
 
@@ -837,6 +843,7 @@ class Logger:
                 return _dict
 
         return None
+
 
 # ---------------------------------------------------------------------------
 

@@ -15,6 +15,7 @@ from firewall.server.decorators import handle_exceptions, \
     dbus_handle_exceptions, dbus_service_method, \
     dbus_polkit_require_auth
 
+
 class FirewallDConfigPolicy(DbusServiceObject):
     persistent = True
     default_polkit_auth_required = config.dbus.PK_ACTION_CONFIG

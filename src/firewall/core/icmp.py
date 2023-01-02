@@ -83,20 +83,24 @@ ICMPV6_TYPES = {
     "redirect": "137/0",
 }
 
+
 def check_icmp_name(_name):
     if _name in ICMP_TYPES:
         return True
     return False
+
 
 def check_icmp_type(_type):
     if _type in ICMP_TYPES.values():
         return True
     return False
 
+
 def check_icmpv6_name(_name):
     if _name in ICMP_TYPES:
         return True
     return False
+
 
 def check_icmpv6_type(_type):
     if _type in ICMPV6_TYPES.values():

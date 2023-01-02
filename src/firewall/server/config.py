@@ -50,6 +50,7 @@ from firewall.dbus_utils import dbus_to_python, \
     dbus_introspection_add_deprecated
 from firewall.errors import ErrorCode, FirewallError
 
+
 ############################################################################
 #
 # class FirewallDConfig
@@ -1632,7 +1633,6 @@ class FirewallDConfig(DbusServiceObject):
                                 "passthrough '%s', '%s'" % (ipv, args))
         settings[2].append(idx)
         self.update(settings)
-
 
     @dbus_service_method_deprecated(config.dbus.DBUS_INTERFACE_CONFIG_DIRECT)
     @dbus_service_method(config.dbus.DBUS_INTERFACE_CONFIG_DIRECT,

@@ -30,6 +30,7 @@ import unittest
 from firewall import config
 from firewall.dbus_utils import dbus_to_python
 
+
 class TestFirewallDInterfaceDirect(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
@@ -109,6 +110,7 @@ class TestFirewallDInterfaceDirect(unittest.TestCase):
 
     def test_reload(self):
         self.fw.reload()
+
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestFirewallDInterfaceDirect)

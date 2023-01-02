@@ -32,6 +32,7 @@ from firewall.client import FirewallClient, \
                             FirewallClientIcmpTypeSettings
 from firewall.core.base import DEFAULT_ZONE_TARGET
 
+
 class TestFirewallDInterfaceConfig(unittest.TestCase):
     """
     For testing of permanent changes, ie. those that survive restart:

@@ -31,6 +31,7 @@ from xml.dom import minidom
 
 from firewall.core.logger import log
 
+
 def command_of_pid(pid):
     """ Get command for pid from /proc """
     try:
@@ -39,6 +40,7 @@ def command_of_pid(pid):
     except Exception:
         return None
     return cmd
+
 
 def pid_of_sender(bus, sender):
     """ Get pid from sender string using
@@ -53,6 +55,7 @@ def pid_of_sender(bus, sender):
         return None
     return pid
 
+
 def uid_of_sender(bus, sender):
     """ Get user id from sender string using
     org.freedesktop.DBus.GetConnectionUnixUser """
@@ -66,6 +69,7 @@ def uid_of_sender(bus, sender):
         return None
     return uid
 
+
 def user_of_uid(uid):
     """ Get user for uid from pwd """
 
@@ -74,6 +78,7 @@ def user_of_uid(uid):
     except Exception:
         return None
     return pws[0]
+
 
 def context_of_sender(bus, sender):
     """ Get SELinux context from sender string using
@@ -89,13 +94,16 @@ def context_of_sender(bus, sender):
 
     return "".join(map(chr, dbus_to_python(context)))
 
+
 def command_of_sender(bus, sender):
     """ Return command of D-Bus sender """
 
     return command_of_pid(pid_of_sender(bus, sender))
 
+
 def user_of_sender(bus, sender):
     return user_of_uid(uid_of_sender(bus, sender))
+
 
 def dbus_to_python(obj, expected_type=None):
     if obj is None:
@@ -143,6 +151,7 @@ def dbus_to_python(obj, expected_type=None):
 
     return python_obj
 
+
 def dbus_signature(obj):
     if isinstance(obj, dbus.Boolean):
         return 'b'
@@ -178,6 +187,7 @@ def dbus_signature(obj):
     else:
         raise TypeError("Unhandled %s" % repr(obj))
 
+
 def dbus_introspection_prepare_properties(obj, interface, access=None):
     if access is None:
         access = { }
@@ -197,6 +207,7 @@ def dbus_introspection_prepare_properties(obj, interface, access=None):
             dip[interface][key]["access"] = access[key]
         else:
             dip[interface][key]["access"] = "read"
+
 
 def dbus_introspection_add_properties(obj, data, interface):
     doc = minidom.parseString(data)
@@ -220,6 +231,7 @@ def dbus_introspection_add_properties(obj, data, interface):
     new_data = doc.toxml()
     doc.unlink()
     return new_data
+
 
 def dbus_introspection_add_deprecated(obj, data, interface, deprecated_methods, deprecated_signals):
     doc = minidom.parseString(data)

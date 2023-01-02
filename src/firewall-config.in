@@ -70,13 +70,16 @@ if not datadir:
 from gtk3_chooserbutton import ChooserButton
 from gtk3_niceexpander import NiceExpander
 
+
 def escape(text):
     text = text.replace('&', '&amp;')
     text = text.replace('>', '&gt;')
     text = text.replace('<', '&lt;')
     return text
 
+
 FIREWALL_CONFIG_SCHEMA = "org.fedoraproject.FirewallConfig"
+
 
 class FirewallConfig:
     def __init__(self):
@@ -542,8 +545,6 @@ class FirewallConfig:
         self.editSourcePortButton = builder.get_object("editSourcePortButton")
         self.removeSourcePortButton = \
             builder.get_object("removeSourcePortButton")
-
-
 
         self.masqueradeCheck = builder.get_object("masqueradeCheck")
         self.masqueradeEventbox = builder.get_object("masqueradeEventbox")
@@ -7250,7 +7251,6 @@ class FirewallConfig:
         else:
             self.contextDialogOkButton.set_sensitive(False)
 
-
     def onAddCommand(self, button):
         self.add_edit_command(True)
 
@@ -7442,7 +7442,6 @@ class FirewallConfig:
             self.userDialogOkButton.set_sensitive(True)
         else:
             self.userDialogOkButton.set_sensitive(False)
-
 
     def onAddUid(self, button):
         self.add_edit_uid(True)
@@ -7988,6 +7987,7 @@ def combobox_select_text(combobox, value, insensitive=False):
     combobox.set_active(0)
     return False
 
+
 class ZoneInterfaceEditor(Gtk.Dialog):
     def __init__(self, fw, interface, zone):
         self.fw = fw
@@ -8067,6 +8067,7 @@ class ZoneInterfaceEditor(Gtk.Dialog):
 
         self.fw.changeZoneOfInterface(self.get_zone(), self.interface)
 
+
 class ZoneConnectionEditor(ZoneInterfaceEditor):
     def __init__(self, fw, connection, connection_name, zone):
         self.fw = fw
@@ -8090,6 +8091,7 @@ class ZoneConnectionEditor(ZoneInterfaceEditor):
 
         nm_set_zone_of_connection(self.get_zone(), self.connection)
 
+
 class ZoneSourceEditor(ZoneInterfaceEditor):
     def __init__(self, fw, source, zone):
         self.fw = fw
@@ -8105,6 +8107,7 @@ class ZoneSourceEditor(ZoneInterfaceEditor):
             return
 
         self.fw.changeZoneOfSource(self.get_zone(), self.source)
+
 
 # MAIN
 

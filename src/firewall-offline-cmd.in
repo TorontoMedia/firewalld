@@ -45,13 +45,16 @@ from firewall.core.io.icmptype import icmptype_reader
 from firewall.core.io.helper import helper_reader
 from firewall.command import FirewallCommand
 
+
 # check for root user
 def assert_root():
     if os.getuid() != 0:
         sys.stderr.write("You need to be root to run %s.\n" % sys.argv[0])
         sys.exit(-1)
 
+
 SYSTEM_CONFIG_FIREWALL = config.SYSCONFIGDIR + '/system-config-firewall'
+
 
 def __usage():
     sys.stdout.write("""
@@ -520,12 +523,14 @@ Polkit Options
 
 """ % (SYSTEM_CONFIG_FIREWALL, config.SYSCONFIGDIR))
 
+
 def parse_port_lokkit(value):
     try:
         (port, proto) = value.split(":")
     except Exception:
         cmd.fail("bad port (most likely missing protocol), correct syntax is portid[-portid]:protocol")
     return (port, proto)
+
 
 def pk_symlink(product='server'):
     _PK_DIR = '/usr/share/polkit-1/actions/'
@@ -538,6 +543,7 @@ def pk_symlink(product='server'):
         cmd.print_and_exit('symlink '+_PK_DIR+_PK_NAME+product+'.policy.choice -> '+_PK_NAME+'policy')
     else:
         cmd.fail('no such file '+_PK_DIR+_PK_NAME+product+'.policy.choice')
+
 
 # system-config-firewall
 def read_sysconfig_args(config_file=SYSTEM_CONFIG_FIREWALL):
@@ -558,6 +564,7 @@ def read_sysconfig_args(config_file=SYSTEM_CONFIG_FIREWALL):
         argv.append(line)
     f.close()
     return argv
+
 
 parser = argparse.ArgumentParser(usage="see firewall-offline-cmd man page",
                                  add_help=False)
@@ -846,8 +853,11 @@ parser_direct.add_argument("--get-all-rules", action="store_true")
 
 cmd = FirewallCommand()
 
+
 def myexcepthook(exctype, value, traceback):
     cmd.exception_handler(str(value))
+
+
 sys.excepthook = myexcepthook
 
 if len(sys.argv) > 1 and \

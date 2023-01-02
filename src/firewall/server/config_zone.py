@@ -38,6 +38,7 @@ from firewall.errors import ErrorCode, FirewallError
 from firewall.functions import portStr, portInPortRange, coalescePortRange, \
                                breakPortRange
 
+
 ############################################################################
 #
 # class FirewallDConfig

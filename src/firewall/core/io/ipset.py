@@ -40,6 +40,7 @@ from firewall.core.icmp import check_icmp_name, check_icmp_type, \
 from firewall.core.logger import log
 from firewall.errors import ErrorCode, FirewallError
 
+
 class IPSet(IO_Object):
     IMPORT_EXPORT_STRUCTURE = (
         ( "version",  "" ),              # s
@@ -298,6 +299,7 @@ class IPSet(IO_Object):
             IPSet.check_entry(entry, config[4], config[3])
         super(IPSet, self).import_config(config, all_io_objects)
 
+
 # PARSER
 
 class ipset_ContentHandler(IO_Object_ContentHandler):
@@ -361,6 +363,7 @@ class ipset_ContentHandler(IO_Object_ContentHandler):
         if name == "entry":
             self.item.entries.append(self._element)
 
+
 def ipset_reader(filename, path):
     ipset = IPSet()
     if not filename.endswith(".xml"):
@@ -411,6 +414,7 @@ def ipset_reader(filename, path):
     del entries_set
 
     return ipset
+
 
 def ipset_writer(ipset, path=None):
     _path = path if path else ipset.path

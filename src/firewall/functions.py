@@ -49,6 +49,7 @@ NOPRINT_TRANS_TABLE = {
     i: None for i in range(0, 160) if not (i > 31 and i < 127)
 }
 
+
 def getPortID(port):
     """ Check and Get port id from port string or port id using socket.getservbyname
 
@@ -71,6 +72,7 @@ def getPortID(port):
     if _id > 65535:
         return -2
     return _id
+
 
 def getPortRange(ports):
     """ Get port range for port range string or single port id
@@ -130,6 +132,7 @@ def getPortRange(ports):
         return None
     return matched[0]
 
+
 def portStr(port, delimiter=":"):
     """ Create port and port range string
 
@@ -148,6 +151,7 @@ def portStr(port, delimiter=":"):
     else:
         return "%s%s%s" % (_range[0], delimiter, _range[1])
 
+
 def portInPortRange(port, range):
     _port = getPortRange(port)
     _range = getPortRange(range)
@@ -165,6 +169,7 @@ def portInPortRange(port, range):
             return True
 
     return False
+
 
 def coalescePortRange(new_range, ranges):
     """ Coalesce a port range with existing list of port ranges
@@ -203,6 +208,7 @@ def coalescePortRange(new_range, ranges):
         coalesced_range = (coalesced_range[0],)
 
     return ([coalesced_range], removed_ranges)
+
 
 def breakPortRange(remove_range, ranges):
     """ break a port range from existing list of port ranges
@@ -247,6 +253,7 @@ def breakPortRange(remove_range, ranges):
 
     return (added_ranges, removed_ranges)
 
+
 def getServiceName(port, proto):
     """ Check and Get service name from port and proto string combination using socket.getservbyport
 
@@ -261,6 +268,7 @@ def getServiceName(port, proto):
         return None
     return name
 
+
 def checkIP(ip):
     """ Check IPv4 address.
 
@@ -274,6 +282,7 @@ def checkIP(ip):
         return False
     return True
 
+
 def normalizeIP6(ip):
     """ Normalize the IPv6 address
 
@@ -281,6 +290,7 @@ def normalizeIP6(ip):
     e.g. [1234::4321] --> 1234:4321
     """
     return ip.strip("[]")
+
 
 def checkIP6(ip):
     """ Check IPv6 address.
@@ -294,6 +304,7 @@ def checkIP6(ip):
     except socket.error:
         return False
     return True
+
 
 def checkIPnMask(ip):
     index = ip.find("/")
@@ -319,8 +330,10 @@ def checkIPnMask(ip):
                 return False
     return True
 
+
 def stripNonPrintableCharacters(rule_str):
     return rule_str.translate(NOPRINT_TRANS_TABLE)
+
 
 def checkIP6nMask(ip):
     index = ip.find("/")
@@ -344,6 +357,7 @@ def checkIP6nMask(ip):
 
     return True
 
+
 def checkProtocol(protocol):
     try:
         i = int(protocol)
@@ -359,6 +373,7 @@ def checkProtocol(protocol):
 
     return True
 
+
 def checkTcpMssClamp(tcp_mss_clamp_value):
     if tcp_mss_clamp_value:
         if tcp_mss_clamp_value.isdigit():
@@ -369,6 +384,7 @@ def checkTcpMssClamp(tcp_mss_clamp_value):
         elif tcp_mss_clamp_value != "pmtu":
             return False
     return True
+
 
 def checkInterface(iface):
     """ Check interface string
@@ -389,6 +405,7 @@ def checkInterface(iface):
     #    return False
     return True
 
+
 def checkUINT16(val):
     try:
         x = int(val, 0)
@@ -399,6 +416,7 @@ def checkUINT16(val):
             return True
     return False
 
+
 def checkUINT32(val):
     try:
         x = int(val, 0)
@@ -408,6 +426,7 @@ def checkUINT32(val):
         if x >= 0 and x <= 4294967295:
             return True
     return False
+
 
 def firewalld_is_active():
     """ Check if firewalld is active
@@ -438,6 +457,7 @@ def firewalld_is_active():
 
     return False
 
+
 def tempFile():
     try:
         if not os.path.exists(FIREWALLD_TEMPDIR):
@@ -449,6 +469,7 @@ def tempFile():
         log.error("Failed to create temporary file: %s" % msg)
         raise
 
+
 def readfile(filename):
     try:
         with open(filename, "r") as f:
@@ -456,6 +477,7 @@ def readfile(filename):
     except Exception as e:
         log.error('Failed to read file "%s": %s' % (filename, e))
     return None
+
 
 def writefile(filename, line):
     try:
@@ -466,6 +488,7 @@ def writefile(filename, line):
         return False
     return True
 
+
 def enable_ip_forwarding(ipv):
     if ipv == "ipv4":
         return writefile("/proc/sys/net/ipv4/ip_forward", "1\n")
@@ -473,8 +496,10 @@ def enable_ip_forwarding(ipv):
         return writefile("/proc/sys/net/ipv6/conf/all/forwarding", "1\n")
     return False
 
+
 def get_nf_conntrack_short_name(module):
     return module.replace("_","-").replace("nf-conntrack-", "")
+
 
 def check_port(port):
     _range = getPortRange(port)
@@ -491,6 +516,7 @@ def check_port(port):
         return False
     return True
 
+
 def check_address(ipv, source):
     if ipv == "ipv4":
         return checkIPnMask(source)
@@ -499,6 +525,7 @@ def check_address(ipv, source):
     else:
         return False
 
+
 def check_single_address(ipv, source):
     if ipv == "ipv4":
         return checkIP(source)
@@ -506,6 +533,7 @@ def check_single_address(ipv, source):
         return checkIP6(source)
     else:
         return False
+
 
 def check_mac(mac):
     if len(mac) == 12+5:
@@ -519,6 +547,7 @@ def check_mac(mac):
         return True
     return False
 
+
 def uniqify(_list):
     # removes duplicates from list, whilst preserving order
     output = []
@@ -526,6 +555,7 @@ def uniqify(_list):
         if x not in output:
             output.append(x)
     return output
+
 
 def ppid_of_pid(pid):
     """ Get parent for pid """
@@ -536,6 +566,7 @@ def ppid_of_pid(pid):
     except Exception:
         return None
     return pid
+
 
 def max_policy_name_len():
     """
@@ -548,6 +579,7 @@ def max_policy_name_len():
     longest_shortcut = max(map(len, SHORTCUTS.values()))
     return 28 - (longest_shortcut + len(POLICY_CHAIN_PREFIX) + len("_allow"))
 
+
 def max_zone_name_len():
     """
     Netfilter limits length of chain to (currently) 28 chars.
@@ -557,6 +589,7 @@ def max_zone_name_len():
     from firewall.core.base import SHORTCUTS
     longest_shortcut = max(map(len, SHORTCUTS.values()))
     return 28 - (longest_shortcut + len("__allow"))
+
 
 def checkUser(user):
     if len(user) < 1 or len(user) > os.sysconf('SC_LOGIN_NAME_MAX'):
@@ -568,6 +601,7 @@ def checkUser(user):
             return False
     return True
 
+
 def checkUid(uid):
     if isinstance(uid, str):
         try:
@@ -578,6 +612,7 @@ def checkUid(uid):
         return True
     return False
 
+
 def checkCommand(command):
     if len(command) < 1 or len(command) > 1024:
         return False
@@ -587,6 +622,7 @@ def checkCommand(command):
     if command[0] != "/":
         return False
     return True
+
 
 def checkContext(context):
     splits = context.split(":")
@@ -606,11 +642,13 @@ def checkContext(context):
         return False
     return True
 
+
 def joinArgs(args):
     if "quote" in dir(shlex):
         return " ".join(shlex.quote(a) for a in args)
     else:
         return " ".join(pipes.quote(a) for a in args)
+
 
 def splitArgs(_string):
     return shlex.split(_string)

@@ -30,6 +30,7 @@ from dbus.exceptions import DBusException
 from firewall.functions import checkIPnMask, checkIP6nMask, check_mac, \
     check_port, check_single_address
 
+
 class FirewallCommand:
     def __init__(self, quiet=False, verbose=False):
         self.quiet = quiet
@@ -189,7 +190,6 @@ class FirewallCommand:
                             parse_method, message, start_args=[x],
                             no_exit=no_exit)
 
-
     def __query_sequence(self, option, query_method, parse_method, message, # pylint: disable=R0913
                          start_args=None, no_exit=False):
         items = [ ]
@@ -249,7 +249,6 @@ class FirewallCommand:
                          message, no_exit=False):
         self.__query_sequence(option, query_method, parse_method,
                               message, start_args=[x], no_exit=no_exit)
-
 
     def parse_source(self, value):
         if not checkIPnMask(value) and not checkIP6nMask(value) \

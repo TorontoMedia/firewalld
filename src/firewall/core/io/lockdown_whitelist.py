@@ -32,6 +32,7 @@ from firewall.functions import uniqify, checkUser, checkUid, checkCommand, \
                                checkContext
 from firewall.errors import ErrorCode, FirewallError
 
+
 class lockdown_whitelist_ContentHandler(IO_Object_ContentHandler):
     def __init__(self, item):
         IO_Object_ContentHandler.__init__(self, item)
@@ -81,6 +82,7 @@ class lockdown_whitelist_ContentHandler(IO_Object_ContentHandler):
         else:
             log.error('Unknown XML element %s' % name)
             return
+
 
 class LockdownWhitelist(IO_Object):
     """ LockdownWhitelist class """
@@ -186,7 +188,6 @@ class LockdownWhitelist(IO_Object):
             raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 'Uid "%s" already in whitelist' % uid)
 
-
     def remove_uid(self, uid):
         if uid in self.uids:
             self.uids.remove(uid)
@@ -213,7 +214,6 @@ class LockdownWhitelist(IO_Object):
         else:
             raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 'User "%s" already in whitelist' % user)
-
 
     def remove_user(self, user):
         if user in self.users:
@@ -285,7 +285,6 @@ class LockdownWhitelist(IO_Object):
         else:
             raise FirewallError(ErrorCode.ALREADY_ENABLED,
                                 'Context "%s" already in whitelist' % context)
-
 
     def remove_context(self, context):
         if context in self.contexts:

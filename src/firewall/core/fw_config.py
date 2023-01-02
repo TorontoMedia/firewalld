@@ -37,6 +37,7 @@ from firewall.core.io.helper import Helper, helper_reader, helper_writer
 from firewall.core.io.policy import Policy, policy_reader, policy_writer
 from firewall.errors import ErrorCode, FirewallError
 
+
 class FirewallConfig:
     def __init__(self, fw):
         self._fw = fw

@@ -23,6 +23,7 @@ __all__ = [ "Watcher" ]
 
 from gi.repository import Gio, GLib
 
+
 class Watcher:
     def __init__(self, callback, timeout):
         self._callback = callback

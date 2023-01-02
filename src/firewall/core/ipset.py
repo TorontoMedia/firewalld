@@ -68,6 +68,7 @@ IPSET_DEFAULT_CREATE_OPTIONS = {
     "maxelem": "65536",
 }
 
+
 class ipset:
     """ipset command wrapper class"""
 
@@ -281,6 +282,7 @@ def check_ipset_name(name):
         return False
     return True
 
+
 def remove_default_create_options(options):
     """ Return only non default create options """
     _options = options.copy()
@@ -289,6 +291,7 @@ def remove_default_create_options(options):
            IPSET_DEFAULT_CREATE_OPTIONS[opt] == _options[opt]:
             del _options[opt]
     return _options
+
 
 def normalize_ipset_entry(entry):
     """ Normalize IP addresses in entry """
@@ -301,6 +304,7 @@ def normalize_ipset_entry(entry):
             _entry.append(_part)
 
     return ",".join(_entry)
+
 
 def check_entry_overlaps_existing(entry, entries):
     """ Check if entry overlaps any entry in the list of entries """
@@ -317,6 +321,7 @@ def check_entry_overlaps_existing(entry, entries):
     for itr in entries:
         if entry_network.overlaps(ipaddress.ip_network(itr, strict=False)):
             raise FirewallError(ErrorCode.INVALID_ENTRY, "Entry '{}' overlaps with existing entry '{}'".format(entry, itr))
+
 
 def check_for_overlapping_entries(entries):
     """ Check if any entry overlaps any entry in the list of entries """

@@ -38,6 +38,7 @@ import traceback
 exception_handler = None
 not_authorized_loop = False
 
+
 def handle_exceptions(func):
     """Decorator to handle exceptions
     """
@@ -76,6 +77,7 @@ def handle_exceptions(func):
             if not not_authorized_loop:
                 break
     return _impl
+
 
 # zone config settings
 
@@ -835,6 +837,7 @@ class FirewallClientConfigZone:
     def queryRichRule(self, rule):
         return self.fw_zone.queryRichRule(rule)
 
+
 class FirewallClientPolicySettings:
     @handle_exceptions
     def __init__(self, settings=None):
@@ -1168,6 +1171,7 @@ class FirewallClientPolicySettings:
     def setPriority(self, priority):
         self.settings["priority"] = int(priority)
 
+
 class FirewallClientConfigPolicy:
     def __init__(self, bus, path):
         self.bus = bus
@@ -1213,6 +1217,7 @@ class FirewallClientConfigPolicy:
     @handle_exceptions
     def rename(self, name):
         self.fw_policy.rename(name)
+
 
 # service config settings
 
@@ -1444,6 +1449,7 @@ class FirewallClientServiceSettings:
     def queryHelper(self, helper):
         return helper in self.settings[9]
 
+
 # ipset config settings
 
 class FirewallClientIPSetSettings:
@@ -1548,6 +1554,7 @@ class FirewallClientIPSetSettings:
         entry = normalize_ipset_entry(entry)
         return entry in self.settings[5]
 
+
 # ipset config
 
 class FirewallClientConfigIPSet:
@@ -1650,6 +1657,7 @@ class FirewallClientConfigIPSet:
     def queryEntry(self, entry):
         return self.fw_ipset.queryEntry(entry)
 
+
 # helper config settings
 
 class FirewallClientHelperSettings:
@@ -1724,6 +1732,7 @@ class FirewallClientHelperSettings:
     @handle_exceptions
     def queryPort(self, port, protocol):
         return (port,protocol) in self.settings[5]
+
 
 # helper config
 
@@ -1848,6 +1857,7 @@ class FirewallClientConfigHelper:
     @handle_exceptions
     def setModule(self, module):
         self.fw_helper.setModule(module)
+
 
 # service config
 
@@ -2136,6 +2146,7 @@ class FirewallClientIcmpTypeSettings:
         return not self.settings[3] or \
                destination in self.settings[3]
 
+
 # icmptype config
 
 class FirewallClientConfigIcmpType:
@@ -2325,6 +2336,7 @@ class FirewallClientPoliciesLockdownWhitelist:
     def queryUid(self, uid):
         return uid in self.settings[3]
 
+
 # config.policies
 
 class FirewallClientConfigPolicies:
@@ -2421,6 +2433,7 @@ class FirewallClientConfigPolicies:
     @handle_exceptions
     def queryLockdownWhitelistUid(self, uid):
         return dbus_to_python(self.fw_policies.queryLockdownWhitelistUid(uid))
+
 
 # config.direct
 
@@ -2520,6 +2533,7 @@ class FirewallClientDirect:
         idx = (ipv, args)
         return idx in self.settings[2]
 
+
 # config.direct
 
 class FirewallClientConfigDirect:
@@ -2610,6 +2624,7 @@ class FirewallClientConfigDirect:
     @handle_exceptions
     def getAllPassthroughs(self):
         return dbus_to_python(self.fw_direct.getAllPassthroughs())
+
 
 # config
 
@@ -2829,7 +2844,8 @@ class FirewallClientConfig:
             path = self.fw_config.addHelper(name, tuple(settings))
         return FirewallClientConfigHelper(self.bus, path)
 
-#
+
+# client
 
 class FirewallClient:
     @handle_exceptions

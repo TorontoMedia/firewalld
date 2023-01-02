@@ -32,6 +32,7 @@ from firewall.core.io.io_object import IO_Object, \
 from firewall.core.logger import log
 from firewall.errors import ErrorCode, FirewallError
 
+
 class IcmpType(IO_Object):
     IMPORT_EXPORT_STRUCTURE = (
         ( "version",  "" ),          # s
@@ -72,6 +73,7 @@ class IcmpType(IO_Object):
                                         "'%s' not from {'ipv4'|'ipv6'}" % \
                                         destination)
 
+
 # PARSER
 
 class icmptype_ContentHandler(IO_Object_ContentHandler):
@@ -94,6 +96,7 @@ class icmptype_ContentHandler(IO_Object_ContentHandler):
                 if x in attrs and \
                         attrs[x].lower() in [ "yes", "true" ]:
                     self.item.destination.append(str(x))
+
 
 def icmptype_reader(filename, path):
     icmptype = IcmpType()
@@ -122,6 +125,7 @@ def icmptype_reader(filename, path):
     del handler
     del parser
     return icmptype
+
 
 def icmptype_writer(icmptype, path=None):
     _path = path if path else icmptype.path

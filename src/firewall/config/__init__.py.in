@@ -61,6 +61,7 @@ LICENSE = gettext.gettext(
     "along with this program.  If not, see <http://www.gnu.org/licenses/>.")
 WEBSITE = 'http://www.firewalld.org'
 
+
 def set_system_config_paths(path):
     global ETC_FIREWALLD, FIREWALLD_CONF, ETC_FIREWALLD_ZONES, \
            ETC_FIREWALLD_SERVICES, ETC_FIREWALLD_ICMPTYPES, \
@@ -76,7 +77,10 @@ def set_system_config_paths(path):
     ETC_FIREWALLD_POLICIES = path + '/policies'
     FIREWALLD_DIRECT = path + '/direct.xml'
     LOCKDOWN_WHITELIST = path + '/lockdown-whitelist.xml'
+
+
 set_system_config_paths('/etc/firewalld')
+
 
 def set_default_config_paths(path):
     global USR_LIB_FIREWALLD, FIREWALLD_ZONES, FIREWALLD_SERVICES, \
@@ -89,6 +93,8 @@ def set_default_config_paths(path):
     FIREWALLD_IPSETS = path + '/ipsets'
     FIREWALLD_HELPERS = path + '/helpers'
     FIREWALLD_POLICIES = path + '/policies'
+
+
 set_default_config_paths('/usr/lib/firewalld')
 
 FIREWALLD_LOGFILE = '/var/log/firewalld'

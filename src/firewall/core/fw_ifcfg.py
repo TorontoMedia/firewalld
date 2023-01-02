@@ -30,6 +30,7 @@ from firewall import config
 from firewall.core.logger import log
 from firewall.core.io.ifcfg import ifcfg
 
+
 def search_ifcfg_of_interface(interface):
     """search ifcfg file for the interface in config.IFCFGDIR"""
 
@@ -59,6 +60,7 @@ def search_ifcfg_of_interface(interface):
         return ifcfg_file
 
     return None
+
 
 def ifcfg_set_zone_of_interface(zone, interface):
     """Set zone (ZONE=<zone>) in the ifcfg file that uses the interface

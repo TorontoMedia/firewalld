@@ -32,6 +32,7 @@ from firewall.server.decorators import handle_exceptions, \
     dbus_polkit_require_auth
 from firewall.errors import ErrorCode, FirewallError
 
+
 ############################################################################
 #
 # class FirewallDConfig

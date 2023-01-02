@@ -53,6 +53,7 @@ from firewall.core.fw_nm import nm_get_connection_of_interface, \
 from firewall.core.fw_ifcfg import ifcfg_set_zone_of_interface
 from firewall.errors import ErrorCode, FirewallError
 
+
 ############################################################################
 #
 # class FirewallD

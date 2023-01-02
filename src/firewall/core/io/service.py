@@ -33,6 +33,7 @@ from firewall.core.io.io_object import IO_Object, \
 from firewall.core.logger import log
 from firewall.errors import ErrorCode, FirewallError
 
+
 class Service(IO_Object):
     IMPORT_EXPORT_STRUCTURE = (
         ( "version",  "" ),
@@ -130,6 +131,7 @@ class Service(IO_Object):
                     raise FirewallError(ErrorCode.INVALID_SERVICE,
                             "Service '{}': Included service '{}' not found.".format(
                                 self.name, include))
+
 
 # PARSER
 
@@ -241,6 +243,7 @@ def service_reader(filename, path):
     del handler
     del parser
     return service
+
 
 def service_writer(service, path=None):
     _path = path if path else service.path

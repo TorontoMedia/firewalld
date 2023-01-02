@@ -32,6 +32,7 @@ from collections import OrderedDict
 from firewall import functions
 from firewall.errors import ErrorCode, FirewallError
 
+
 class IO_Object:
     """ Abstract IO_Object as base for icmptype, service and zone """
 
@@ -186,6 +187,7 @@ class IO_Object:
             raise FirewallError(ErrorCode.PARSE_ERROR,
                                 "%s: Unexpected attribute %s" % (name, x))
 
+
 # PARSER
 
 class UnexpectedElementError(Exception):
@@ -194,6 +196,7 @@ class UnexpectedElementError(Exception):
         self.name = name
     def __str__(self):
         return "Unexpected element '%s'" % (self.name)
+
 
 class MissingAttributeError(Exception):
     def __init__(self, name, attribute):
@@ -204,6 +207,7 @@ class MissingAttributeError(Exception):
         return "Element '%s': missing '%s' attribute" % \
             (self.name, self.attribute)
 
+
 class UnexpectedAttributeError(Exception):
     def __init__(self, name, attribute):
         super(UnexpectedAttributeError, self).__init__()
@@ -212,6 +216,7 @@ class UnexpectedAttributeError(Exception):
     def __str__(self):
         return "Element '%s': unexpected attribute '%s'" % \
             (self.name, self.attribute)
+
 
 class IO_Object_ContentHandler(sax.handler.ContentHandler):
     def __init__(self, item):
@@ -232,6 +237,7 @@ class IO_Object_ContentHandler(sax.handler.ContentHandler):
 
     def characters(self, content):
         self._element += content.replace('\n', ' ')
+
 
 class IO_Object_XMLGenerator(saxutils.XMLGenerator):
     def __init__(self, out):
@@ -259,6 +265,7 @@ class IO_Object_XMLGenerator(saxutils.XMLGenerator):
             self._write(' %s=%s' % (name, saxutils.quoteattr(value)))
         self._write('/>')
 
+
 def check_port(port):
     port_range = functions.getPortRange(port)
     if port_range == -2:
@@ -274,15 +281,18 @@ def check_port(port):
         raise FirewallError(ErrorCode.INVALID_PORT,
                             "'%s' is invalid port range" % port)
 
+
 def check_tcpudp(protocol):
     if protocol not in [ "tcp", "udp", "sctp", "dccp" ]:
         raise FirewallError(ErrorCode.INVALID_PROTOCOL,
                             "'%s' not from {'tcp'|'udp'|'sctp'|'dccp'}" % \
                             protocol)
 
+
 def check_protocol(protocol):
     if not functions.checkProtocol(protocol):
         raise FirewallError(ErrorCode.INVALID_PROTOCOL, protocol)
+
 
 def check_address(ipv, addr):
     if not functions.check_address(ipv, addr):

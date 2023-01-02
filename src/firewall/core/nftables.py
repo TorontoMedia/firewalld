@@ -78,6 +78,7 @@ IPTABLES_TO_NFT_HOOK = {
     },
 }
 
+
 def _icmp_types_fragments(protocol, type, code=None):
     fragments = [{"match": {"left": {"payload": {"protocol": protocol, "field": "type"}},
                             "op": "==",
@@ -87,6 +88,7 @@ def _icmp_types_fragments(protocol, type, code=None):
                                     "op": "==",
                                     "right": code}})
     return fragments
+
 
 # Most ICMP types are provided by nft, but for the codes we have to use numeric
 # values.
@@ -155,6 +157,7 @@ ICMP_TYPES_FRAGMENTS = {
         "unknown-option":               _icmp_types_fragments("icmpv6", "parameter-problem", 2),
     }
 }
+
 
 class nftables:
     name = "nftables"

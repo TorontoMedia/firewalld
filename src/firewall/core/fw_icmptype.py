@@ -24,6 +24,7 @@ __all__ = [ "FirewallIcmpType" ]
 from firewall.core.logger import log
 from firewall.errors import ErrorCode, FirewallError
 
+
 class FirewallIcmpType:
     def __init__(self, fw):
         self._fw = fw

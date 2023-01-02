@@ -33,6 +33,7 @@ from firewall.core.io.io_object import IO_Object, \
 from firewall.core.logger import log
 from firewall.errors import ErrorCode, FirewallError
 
+
 class Helper(IO_Object):
     IMPORT_EXPORT_STRUCTURE = (
         ( "version",  "" ),                   # s
@@ -91,6 +92,7 @@ class Helper(IO_Object):
                 raise FirewallError(ErrorCode.INVALID_MODULE,
                                     "Module name '%s' too short" % config)
 
+
 # PARSER
 
 class helper_ContentHandler(IO_Object_ContentHandler):
@@ -128,6 +130,7 @@ class helper_ContentHandler(IO_Object_ContentHandler):
                 log.warning("Port '%s/%s' already set, ignoring.",
                             attrs["port"], attrs["protocol"])
 
+
 def helper_reader(filename, path):
     helper = Helper()
     if not filename.endswith(".xml"):
@@ -155,6 +158,7 @@ def helper_reader(filename, path):
     del handler
     del parser
     return helper
+
 
 def helper_writer(helper, path=None):
     _path = path if path else helper.path

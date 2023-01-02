@@ -28,6 +28,7 @@ from firewall.core.fw_transaction import FirewallTransaction
 from firewall.core.logger import log
 from firewall.errors import ErrorCode, FirewallError
 
+
 ############################################################################
 #
 # class Firewall
@@ -203,7 +204,6 @@ class FirewallDirect:
                 raise FirewallError(ErrorCode.INVALID_CHAIN,
                                     "Chain '%s' is reserved" % chain)
 
-
     def _register_chain(self, table_id, chain, add):
         if add:
             self._chains.setdefault(table_id, [ ]).append(chain)
@@ -259,7 +259,6 @@ class FirewallDirect:
             for chain in self._chains[key]:
                 r.append((ipv, table, chain))
         return r
-
 
     def add_rule(self, ipv, table, chain, priority, args, use_transaction=None):
         if use_transaction is None:
@@ -334,7 +333,6 @@ class FirewallDirect:
         except Exception as msg:
             log.debug2(msg)
             raise FirewallError(ErrorCode.COMMAND_FAILED, msg)
-
 
     def _register_passthrough(self, ipv, args, enable):
         if enable:
@@ -415,7 +413,6 @@ class FirewallDirect:
                 out_rules.append(rule)
 
         return out_rules
-
 
     def _rule(self, enable, ipv, table, chain, priority, args, transaction):
         self._check_ipv_table(ipv, table)

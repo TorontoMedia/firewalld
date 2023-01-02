@@ -36,6 +36,7 @@ from firewall.core import rich
 from firewall.core.logger import log
 from firewall.errors import ErrorCode, FirewallError
 
+
 class Zone(IO_Object):
     """ Zone class """
 
@@ -199,7 +200,6 @@ class Zone(IO_Object):
                                 "Zone '{}': source '{}' already bound to zone '{}'".format(
                                     self.name, source, zone))
 
-
     def check_name(self, name):
         super(Zone, self).check_name(name)
         if name.startswith('/'):
@@ -261,6 +261,7 @@ class Zone(IO_Object):
             self.rules_str.append(str(rule))
         if zone.icmp_block_inversion:
             self.icmp_block_inversion = True
+
 
 # PARSER
 
@@ -388,6 +389,7 @@ class zone_ContentHandler(IO_Object_ContentHandler):
 
         common_endElement(self, name)
 
+
 def zone_reader(filename, path, no_check_name=False):
     zone = Zone()
     if not filename.endswith(".xml"):
@@ -420,6 +422,7 @@ def zone_reader(filename, path, no_check_name=False):
     del handler
     del parser
     return zone
+
 
 def zone_writer(zone, path=None):
     _path = path if path else zone.path
