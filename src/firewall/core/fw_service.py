@@ -23,7 +23,7 @@ __all__ = [ "FirewallService" ]
 
 from firewall.errors import ErrorCode, FirewallError
 
-class FirewallService(object):
+class FirewallService:
     def __init__(self, fw):
         self._fw = fw
         self._services = { }

@@ -21,7 +21,7 @@
 
 __all__ = [ "LastUpdatedOrderedDict" ]
 
-class LastUpdatedOrderedDict(object):
+class LastUpdatedOrderedDict:
     def __init__(self, x=None):
         self._dict = { }
         self._list = [ ]

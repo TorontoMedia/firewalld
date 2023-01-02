@@ -17,7 +17,7 @@ from firewall.core.fw_transaction import FirewallTransaction
 from firewall.errors import ErrorCode, FirewallError
 from firewall.core.base import SOURCE_IPSET_TYPES
 
-class FirewallPolicy(object):
+class FirewallPolicy:
     def __init__(self, fw):
         self._fw = fw
         self._chains = { }

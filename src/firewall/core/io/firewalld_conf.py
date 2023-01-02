@@ -33,7 +33,7 @@ valid_keys = [ "DefaultZone", "MinimalMark", "CleanupOnExit",
                "FirewallBackend", "FlushAllOnReload", "RFC3964_IPv4",
                "AllowZoneDrifting" ]
 
-class firewalld_conf(object):
+class firewalld_conf:
     def __init__(self, filename):
         self._config = { }
         self._deleted = [ ]

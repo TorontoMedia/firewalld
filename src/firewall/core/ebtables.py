@@ -49,7 +49,7 @@ for table in BUILT_IN_CHAINS.keys():
         DEFAULT_RULES[table].append("-I %s_direct 1 -j RETURN" % chain)
         OUR_CHAINS[table].add("%s_direct" % chain)
 
-class ebtables(object):
+class ebtables:
     ipv = "eb"
     name = "ebtables"
     policies_supported = False # ebtables only supported with direct interface

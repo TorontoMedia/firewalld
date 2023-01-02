@@ -34,7 +34,7 @@ from firewall.errors import ErrorCode, FirewallError
 #
 ############################################################################
 
-class FirewallDirect(object):
+class FirewallDirect:
     def __init__(self, fw):
         self._fw = fw
         self.__init_vars()

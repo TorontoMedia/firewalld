@@ -68,7 +68,7 @@ IPSET_DEFAULT_CREATE_OPTIONS = {
     "maxelem": "65536",
 }
 
-class ipset(object):
+class ipset:
     """ipset command wrapper class"""
 
     def __init__(self):

@@ -28,7 +28,7 @@ import traceback
 from firewall.core.logger import log
 from firewall.errors import ErrorCode, FirewallError
 
-class FirewallTransaction(object):
+class FirewallTransaction:
     def __init__(self, fw):
         self.fw = fw
         self.rules = { } # [ ( backend.name, [ rule,.. ] ),.. ]

@@ -32,7 +32,7 @@ from collections import OrderedDict
 from firewall import functions
 from firewall.errors import ErrorCode, FirewallError
 
-class IO_Object(object):
+class IO_Object:
     """ Abstract IO_Object as base for icmptype, service and zone """
 
     IMPORT_EXPORT_STRUCTURE = ( )

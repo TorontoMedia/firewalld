@@ -30,7 +30,7 @@ from firewall.core.ipset import remove_default_create_options as rm_def_cr_opts,
 from firewall.core.io.ipset import IPSet
 from firewall.errors import ErrorCode, FirewallError
 
-class FirewallIPSet(object):
+class FirewallIPSet:
     def __init__(self, fw):
         self._fw = fw
         self._ipsets = { }
