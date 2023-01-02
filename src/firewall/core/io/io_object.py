@@ -194,6 +194,7 @@ class UnexpectedElementError(Exception):
     def __init__(self, name):
         super(UnexpectedElementError, self).__init__()
         self.name = name
+
     def __str__(self):
         return "Unexpected element '%s'" % (self.name)
 
@@ -203,6 +204,7 @@ class MissingAttributeError(Exception):
         super(MissingAttributeError, self).__init__()
         self.name = name
         self.attribute = attribute
+
     def __str__(self):
         return "Element '%s': missing '%s' attribute" % \
             (self.name, self.attribute)
@@ -213,6 +215,7 @@ class UnexpectedAttributeError(Exception):
         super(UnexpectedAttributeError, self).__init__()
         self.name = name
         self.attribute = attribute
+
     def __str__(self):
         return "Element '%s': unexpected attribute '%s'" % \
             (self.name, self.attribute)

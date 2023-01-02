@@ -169,8 +169,10 @@ class FirewallPolicy:
     def set_config_with_settings_dict(self, policy, settings, sender):
         # stupid wrappers to convert rich rule string to rich rule object
         from firewall.core.rich import Rich_Rule
+
         def add_rule_wrapper(policy, rule_str, timeout=0, sender=None):
             self.add_rule(policy, Rich_Rule(rule_str=rule_str), timeout=0, sender=sender)
+
         def remove_rule_wrapper(policy, rule_str):
             self.remove_rule(policy, Rich_Rule(rule_str=rule_str))
 

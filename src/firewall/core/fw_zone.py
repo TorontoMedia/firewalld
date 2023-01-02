@@ -344,6 +344,7 @@ class FirewallZone:
         # stupid wrappers to convert rich rule string to rich rule object
         def add_rule_wrapper(zone, rule_str, timeout=0, sender=None):
             self.add_rule(zone, Rich_Rule(rule_str=rule_str), timeout=0, sender=sender)
+
         def remove_rule_wrapper(zone, rule_str):
             self.remove_rule(zone, Rich_Rule(rule_str=rule_str))
 

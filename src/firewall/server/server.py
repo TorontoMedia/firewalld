@@ -72,6 +72,7 @@ def run_server(debug_gc=False):
         gc.set_debug(gc.DEBUG_LEAK)
 
         gc_timeout = 10
+
         def gc_collect():
             gc.collect()
             if len(gc.garbage) > 0:
