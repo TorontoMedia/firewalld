@@ -1327,6 +1327,20 @@ class FirewallPolicy(object):
                 "ipset '%s' with type '%s' not usable as source" % \
                 (name, _type))
 
+    def _get_service_with_includes(self, service, included_services=None):
+        if included_services is None:
+            included_services = [service]
+
+        svc = self._fw.service.get_service(service)
+        for include in svc.includes:
+            if include in included_services:
+                continue
+            self.check_service(include)
+            included_services.append(include)
+            for include_svc in self._get_service_with_includes(include, included_services):
+                yield include_svc
+        yield svc
+
     def _rule_prepare(self, enable, policy, rule, transaction):
         ipvs = []
         if rule.family:
@@ -1359,64 +1373,64 @@ class FirewallPolicy(object):
         for backend in set([self._fw.get_backend_by_ipv(x) for x in ipvs]):
             # SERVICE
             if type(rule.element) == Rich_Service:
-                svc = self._fw.service.get_service(rule.element.name)
+                for svc in self._get_service_with_includes(rule.element.name):
 
-                destinations = []
-                if len(svc.destination) > 0:
-                    if rule.destination:
-                        # we can not use two destinations at the same time
-                        raise FirewallError(errors.INVALID_RULE,
-                                            "Destination conflict with service.")
-                    for ipv in ipvs:
-                        if ipv in svc.destination and backend.is_ipv_supported(ipv):
-                            destinations.append(svc.destination[ipv])
-                else:
-                    # dummy for the following for loop
-                    destinations.append(None)
+                    destinations = []
+                    if len(svc.destination) > 0:
+                        if rule.destination:
+                            # we can not use two destinations at the same time
+                            raise FirewallError(errors.INVALID_RULE,
+                                                "Destination conflict with service.")
+                        for ipv in ipvs:
+                            if ipv in svc.destination and backend.is_ipv_supported(ipv):
+                                destinations.append(svc.destination[ipv])
+                    else:
+                        # dummy for the following for loop
+                        destinations.append(None)
 
-                for destination in destinations:
-                    if type(rule.action) == Rich_Accept:
-                        # only load modules for accept action
-                        helpers = self.get_helpers_for_service_modules(svc.modules,
-                                                                       enable)
-                        helpers += self.get_helpers_for_service_helpers(svc.helpers)
-                        helpers = sorted(set(helpers), key=lambda x: x.name)
+                    for destination in destinations:
+                        if type(rule.action) == Rich_Accept:
+                            # only load modules for accept action
+                            helpers = self.get_helpers_for_service_modules(svc.modules,
+                                                                        enable)
+                            helpers += self.get_helpers_for_service_helpers(svc.helpers)
+                            helpers = sorted(set(helpers), key=lambda x: x.name)
 
-                        modules = [ ]
-                        for helper in helpers:
-                            module = helper.module
-                            _module_short_name = get_nf_conntrack_short_name(module)
-                            nat_module = module.replace("conntrack", "nat")
-                            modules.append(nat_module)
-                            if helper.family != "" and not backend.is_ipv_supported(helper.family):
-                                # no support for family ipv, continue
-                                continue
-                            if len(helper.ports) < 1:
-                                modules.append(module)
-                            else:
-                                for (port,proto) in helper.ports:
-                                    rules = backend.build_policy_helper_ports_rules(
-                                                    enable, policy, proto, port,
-                                                    destination, helper.name, _module_short_name)
-                                    transaction.add_rules(backend, rules)
-                        transaction.add_modules(modules)
+                            modules = [ ]
+                            for helper in helpers:
+                                module = helper.module
+                                _module_short_name = get_nf_conntrack_short_name(module)
+                                nat_module = module.replace("conntrack", "nat")
+                                modules.append(nat_module)
+                                if helper.family != "" and not backend.is_ipv_supported(helper.family):
+                                    # no support for family ipv, continue
+                                    continue
+                                if len(helper.ports) < 1:
+                                    modules.append(module)
+                                else:
+                                    for (port,proto) in helper.ports:
+                                        rules = backend.build_policy_helper_ports_rules(
+                                                        enable, policy, proto, port,
+                                                        destination, helper.name, _module_short_name)
+                                        transaction.add_rules(backend, rules)
+                            transaction.add_modules(modules)
 
-                    # create rules
-                    for (port,proto) in svc.ports:
-                        rules = backend.build_policy_ports_rules(
-                                    enable, policy, proto, port, destination, rule)
-                        transaction.add_rules(backend, rules)
+                        # create rules
+                        for (port,proto) in svc.ports:
+                            rules = backend.build_policy_ports_rules(
+                                        enable, policy, proto, port, destination, rule)
+                            transaction.add_rules(backend, rules)
 
-                    for proto in svc.protocols:
-                        rules = backend.build_policy_protocol_rules(
-                                    enable, policy, proto, destination, rule)
-                        transaction.add_rules(backend, rules)
+                        for proto in svc.protocols:
+                            rules = backend.build_policy_protocol_rules(
+                                        enable, policy, proto, destination, rule)
+                            transaction.add_rules(backend, rules)
 
-                    # create rules
-                    for (port,proto) in svc.source_ports:
-                        rules = backend.build_policy_source_ports_rules(
-                                    enable, policy, proto, port, destination, rule)
-                        transaction.add_rules(backend, rules)
+                        # create rules
+                        for (port,proto) in svc.source_ports:
+                            rules = backend.build_policy_source_ports_rules(
+                                        enable, policy, proto, port, destination, rule)
+                            transaction.add_rules(backend, rules)
 
             # PORT
             elif type(rule.element) == Rich_Port:
@@ -1513,69 +1527,57 @@ class FirewallPolicy(object):
                 raise FirewallError(errors.INVALID_RULE, "Unknown element %s" %
                                     type(rule.element))
 
-    def _service(self, enable, policy, service, transaction, included_services=None):
-        svc = self._fw.service.get_service(service)
-        helpers = self.get_helpers_for_service_modules(svc.modules, enable)
-        helpers += self.get_helpers_for_service_helpers(svc.helpers)
-        helpers = sorted(set(helpers), key=lambda x: x.name)
+    def _service(self, enable, policy, service, transaction):
+        # clamp ipvs to those that are actually enabled.
+        ipvs = list(filter(self._fw.is_ipv_enabled, ("ipv4", "ipv6")))
 
-        # First apply any services this service may include
-        if included_services is None:
-            included_services = [service]
-        for include in svc.includes:
-            if include in included_services:
-                continue
-            self.check_service(include)
-            included_services.append(include)
-            self._service(enable, policy, include, transaction, included_services=included_services)
+        for svc in self._get_service_with_includes(service):
+            for backend in set([self._fw.get_backend_by_ipv(x) for x in ipvs]):
+                helpers = self.get_helpers_for_service_modules(svc.modules, enable)
+                helpers += self.get_helpers_for_service_helpers(svc.helpers)
+                helpers = sorted(set(helpers), key=lambda x: x.name)
 
-        # build a list of (backend, destination). The destination may be ipv4,
-        # ipv6 or None
-        #
-        backends_ipv = []
-        for ipv in ["ipv4", "ipv6"]:
-            if not self._fw.is_ipv_enabled(ipv):
-                continue
-            backend = self._fw.get_backend_by_ipv(ipv)
-            if len(svc.destination) > 0:
-                if ipv in svc.destination:
-                    backends_ipv.append((backend, svc.destination[ipv]))
-            else:
-                if (backend, None) not in backends_ipv:
-                    backends_ipv.append((backend, None))
-
-        for (backend,destination) in backends_ipv:
-            for helper in helpers:
-                module = helper.module
-                _module_short_name = get_nf_conntrack_short_name(module)
-                nat_module = helper.module.replace("conntrack", "nat")
-                transaction.add_module(nat_module)
-                if helper.family != "" and not backend.is_ipv_supported(helper.family):
-                    # no support for family ipv, continue
-                    continue
-                if len(helper.ports) < 1:
-                    transaction.add_module(module)
+                destinations = []
+                if len(svc.destination) > 0:
+                    for ipv in ipvs:
+                        if ipv in svc.destination and backend.is_ipv_supported(ipv):
+                            destinations.append(svc.destination[ipv])
                 else:
-                    for (port,proto) in helper.ports:
-                        rules = backend.build_policy_helper_ports_rules(
-                                        enable, policy, proto, port,
-                                        destination, helper.name, _module_short_name)
+                    # dummy for the following for loop
+                    destinations.append(None)
+
+                for destination in destinations:
+                    for helper in helpers:
+                        module = helper.module
+                        _module_short_name = get_nf_conntrack_short_name(module)
+                        nat_module = helper.module.replace("conntrack", "nat")
+                        transaction.add_module(nat_module)
+                        if helper.family != "" and not backend.is_ipv_supported(helper.family):
+                            # no support for family ipv, continue
+                            continue
+                        if len(helper.ports) < 1:
+                            transaction.add_module(module)
+                        else:
+                            for (port,proto) in helper.ports:
+                                rules = backend.build_policy_helper_ports_rules(
+                                                enable, policy, proto, port,
+                                                destination, helper.name, _module_short_name)
+                                transaction.add_rules(backend, rules)
+
+                    for (port,proto) in svc.ports:
+                        rules = backend.build_policy_ports_rules(
+                                    enable, policy, proto, port, destination)
                         transaction.add_rules(backend, rules)
 
-            for (port,proto) in svc.ports:
-                rules = backend.build_policy_ports_rules(enable, policy, proto,
-                                                       port, destination)
-                transaction.add_rules(backend, rules)
-
-            for protocol in svc.protocols:
-                rules = backend.build_policy_protocol_rules(
+                    for protocol in svc.protocols:
+                        rules = backend.build_policy_protocol_rules(
                                     enable, policy, protocol, destination)
-                transaction.add_rules(backend, rules)
+                        transaction.add_rules(backend, rules)
 
-            for (port,proto) in svc.source_ports:
-                rules = backend.build_policy_source_ports_rules(
+                    for (port,proto) in svc.source_ports:
+                        rules = backend.build_policy_source_ports_rules(
                                     enable, policy, proto, port, destination)
-                transaction.add_rules(backend, rules)
+                        transaction.add_rules(backend, rules)
 
     def _port(self, enable, policy, port, protocol, transaction):
         for backend in self._fw.enabled_backends():
