@@ -116,3 +116,53 @@ FWD_CHECK([--permanent --service=my-service-with-include --add-include=does-not-
 FWD_OFFLINE_CHECK([--service=my-service-with-include --add-include=does-not-exist], 101, [ignore], [ignore])
 
 FWD_END_TEST([-e '/ERROR: INVALID_SERVICE:/d'])
+
+FWD_START_TEST([rich service includes])
+AT_KEYWORDS(policy service rich gh707 gh1075)
+
+FWD_CHECK([--permanent --new-policy=foobar], 0, [ignore])
+FWD_CHECK([--permanent --policy=foobar --add-ingress-zone ANY], 0, [ignore])
+FWD_CHECK([--permanent --policy=foobar --add-egress-zone HOST], 0, [ignore])
+
+FWD_CHECK([--permanent --policy=foobar --add-rich-rule='rule family=ipv4 source address="10.10.10.0/24" service name=foreman accept'], 0, [ignore])
+FWD_CHECK([--permanent --policy=foobar --query-rich-rule='rule family=ipv4 source address="10.10.10.0/24" service name=foreman accept'], 0, [ignore])
+
+FWD_RELOAD
+
+NFT_LIST_RULES([inet], [filter_IN_policy_foobar_allow], 0, [dnl
+    table inet firewalld {
+        chain filter_IN_policy_foobar_allow {
+            ip saddr 10.10.10.0/24 tcp dport 53 accept
+            ip saddr 10.10.10.0/24 udp dport 53 accept
+            ip saddr 10.10.10.0/24 tcp dport 80 accept
+            ip saddr 10.10.10.0/24 tcp dport 443 accept
+            ip saddr 10.10.10.0/24 udp dport 67 accept
+            udp dport 69 ct helper set "helper-tftp-udp"
+            ip saddr 10.10.10.0/24 udp dport 69 accept
+            ip saddr 10.10.10.0/24 udp dport 68 accept
+            ip saddr 10.10.10.0/24 tcp dport 8140 accept
+        }
+    }
+])
+IPTABLES_LIST_RULES([filter], [IN_foobar_allow], 0, [dnl
+    ACCEPT tcp -- 10.10.10.0/24 0.0.0.0/0 tcp dpt:53
+    ACCEPT udp -- 10.10.10.0/24 0.0.0.0/0 udp dpt:53
+    ACCEPT tcp -- 10.10.10.0/24 0.0.0.0/0 tcp dpt:80
+    ACCEPT tcp -- 10.10.10.0/24 0.0.0.0/0 tcp dpt:443
+    ACCEPT udp -- 10.10.10.0/24 0.0.0.0/0 udp dpt:67
+    ACCEPT udp -- 10.10.10.0/24 0.0.0.0/0 udp dpt:69
+    ACCEPT udp -- 10.10.10.0/24 0.0.0.0/0 udp dpt:68
+    ACCEPT tcp -- 10.10.10.0/24 0.0.0.0/0 tcp dpt:8140
+])
+
+dnl iptables needs the helper rules in the raw table
+IPTABLES_LIST_RULES([raw], [PRE_foobar_allow], 0, [dnl
+    CT udp -- 0.0.0.0/0 0.0.0.0/0 udp dpt:69 CT helper tftp
+])
+
+FWD_CHECK([--permanent --policy=foobar --remove-rich-rule='rule family=ipv4 source address="10.10.10.0/24" service name=foreman accept'], 0, [ignore])
+FWD_CHECK([--permanent --policy=foobar --query-rich-rule='rule family=ipv4 source address="10.10.10.0/24" service name=foreman accept'], 1, [ignore])
+FWD_CHECK([--policy=foobar --remove-rich-rule='rule family=ipv4 source address="10.10.10.0/24" service name=foreman accept'], 0, [ignore])
+FWD_CHECK([--policy=foobar --query-rich-rule='rule family=ipv4 source address="10.10.10.0/24" service name=foreman accept'], 1, [ignore])
+
+FWD_END_TEST()
