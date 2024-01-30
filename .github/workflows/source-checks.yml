@@ -15,6 +15,7 @@ jobs:
 
     strategy:
       matrix:
+        language: [python]
         python-version: [3.7]
         libnftnl-version: [libnftnl-1.2.3]
         nftables-version: [v1.0.5]
@@ -90,3 +91,13 @@ jobs:
       - name: run unit tests
         run: |
           pytest -v
+
+      - name: initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: analysis source code
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
